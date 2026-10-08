@@ -19,6 +19,7 @@ npm run test:browser
 npm run package:preview
 npm run test:package
 npm run test:consumer:fixture
+npm run test:smoke:fixture
 npm pack --dry-run .breakmyapp/package-preview
 npm run test:consumer
 npm run verify:release
@@ -30,8 +31,9 @@ npm run verify:release
 - `npm test`: builds core/CLI, runs core unit tests including visual and reproduction logic, then runs offline tests.
 - `npm run test:browser`: performs real Chromium integration checks for crawling, accessibility, plugins, trace ZIPs, replay files, and visual regression. It requires a usable Chromium installation.
 - `npm run test:consumer:fixture`: packs a synthetic runtime without external dependencies, installs its tarball in an isolated consumer with `--offline`, and verifies its CLI `--help`/`--version` entrypoints.
-- `npm run test:consumer`: creates the **real workspace** CLI package, packs it, installs it into a clean temporary project with public runtime dependencies, and runs `--version` and `--help`. This needs access to npm Registry or previously cached compatible packages.
-- `npm run verify:release`: executes the full local gates, including a clean consumer install, and must finish with exit code 0.
+- `npm run test:consumer`: creates the **real workspace** CLI package, packs it, installs it into a clean temporary project with public runtime dependencies, runs `--version` and `--help`, then performs a real Chromium scan against a temporary local two-page fixture. It asserts overflow, runtime exceptions, missing assets, accessibility, report files and generated reproductions. This needs npm Registry access (or cached compatible dependencies) and an installed Chromium.
+- `npm run test:smoke:fixture`: checks that the installed-scanner smoke harness rejects missing or meaningless reports without launching Chromium.
+- `npm run verify:release`: executes the full local gates, including a real browser scan from the independently installed package, and must finish with exit code 0.
 
 ## User-facing smoke test
 

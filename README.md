@@ -94,7 +94,7 @@ To run the **actual** packed BreakMyApp CLI in a clean temporary consumer (after
 npm run test:consumer
 ~~~
 
-This builds and packs the real workspace, installs the resulting local tarball in a disposable external project, then checks `breakmyapp --version` and `breakmyapp --help`. It does **not** publish to npm or perform a site scan. If packages are not cached, `npm install` in that isolated consumer still needs npm Registry access.
+This builds and packs the real workspace, installs the resulting local tarball in a disposable external project, then checks `breakmyapp --version` and `breakmyapp --help`, **runs the installed scanner against a temporary two-page site**, checks the emitted JSON/HTML reports, and verifies bug findings and a runnable reproduction file. It does **not** publish to npm. If packages are not cached, `npm install` in that isolated consumer still needs npm Registry access.
 
 The staged output is in `.breakmyapp/package-preview/`, which Git ignores. Its `package.json` is explicitly marked `private: true`: this is for local packaging tests, **not a published npm release**. Public runtime dependencies (`playwright`, `@axe-core/playwright`, and `sharp`) are still installed normally; a working Chromium browser is still required to scan.
 

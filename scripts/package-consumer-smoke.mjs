@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { smokeInstalledScanner } from './smoke-scanner.mjs';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -20,7 +21,7 @@ function npmCommand(args, cwd, timeoutMs = 180_000) {
 }
 
 /** Pack the staged package, install in a clean consumer and run its executable. */
-export async function smokeInstallPackage({ previewDir = join(root, '.breakmyapp/package-preview'), offline = false } = {}) {
+export async function smokeInstallPackage({ previewDir = join(root, '.breakmyapp/package-preview'), offline = false, runScan = false } = {}) {
   const preview = resolve(previewDir);
   const manifest = JSON.parse(await readFile(join(preview, 'package.json'), 'utf8'));
   if (manifest.private !== true || manifest.name !== '@breakmyapp/cli' || !manifest.bin?.breakmyapp) {
@@ -60,7 +61,8 @@ export async function smokeInstallPackage({ previewDir = join(root, '.breakmyapp
     if (!helpOutput.includes('breakmyapp') || !helpOutput.includes('scan')) {
       throw new Error('Installed CLI has no working help/scan command.');
     }
-    return {version: versionOutput, contents: files.length, cliHelp: true, packageName:manifest.name};
+    const scan = runScan ? await smokeInstalledScanner({ entry, cwd:consumer, withAccessibility:true }) : null;
+    return {version: versionOutput, contents: files.length, cliHelp: true, packageName:manifest.name, scan};
   } finally {
     await rm(work, {recursive:true,force:true});
   }
@@ -68,9 +70,10 @@ export async function smokeInstallPackage({ previewDir = join(root, '.breakmyapp
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const outcome = await smokeInstallPackage({offline:process.argv.includes('--offline')});
+    const outcome = await smokeInstallPackage({offline:process.argv.includes('--offline'),runScan:process.argv.includes('--scan')});
     console.log('Installed packaged CLI in an isolated consumer successfully.');
     console.log(outcome.packageName + '@' + outcome.version + ' — ' + outcome.contents + ' packed files.');
+    if (outcome.scan) console.log('Real browser smoke PASSED: ' + outcome.scan.pages + ' pages, ' + outcome.scan.findings + ' findings.');
   } catch (error) {
     console.error('Consumer smoke test failed: ' + error.message);
     process.exitCode = 1;
