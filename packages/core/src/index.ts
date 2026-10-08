@@ -17,3 +17,6 @@ export { PageQueue, eligiblePageUrl } from './crawl.js';
 
 export { axeSeverity, axeSelector, normalizeAxeViolations } from './accessibility.js';
 export type { AxeNode, AxeViolation } from './accessibility.js';
+
+export { defineRule, validateRulePlugin, runRulePlugins } from './plugins.js';
+export type { RulePlugin, PluginContext, PluginObservation } from './plugins.js';

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { normalizeAxeViolations } from './accessibility.js';
+import { runRulePlugins } from './plugins.js';
 import { PageQueue } from './crawl.js';
 import {
   dedupeResourceProblems,
@@ -276,6 +277,15 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
               viewport,
               evidence: { detail: 'Retry on a stable page or disable --a11y. No compliance conclusion can be drawn.' }
             }));
+          }
+        }
+
+        if (options.plugins?.length) {
+          const pluginFindings = await runRulePlugins(options.plugins, {
+            page, url: current, viewport
+          });
+          for (const pluginFinding of pluginFindings) {
+            findings.push(newFinding(pluginFinding));
           }
         }
 

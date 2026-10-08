@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "node --test dist/test/accessibility.test.js dist/test/crawl.test.js dist/test/report.test.js dist/test/resources.test.js dist/test/scan.test.js"
+    "test": "node --test dist/test/accessibility.test.js dist/test/crawl.test.js dist/test/plugins.test.js dist/test/report.test.js dist/test/resources.test.js dist/test/scan.test.js"
   },
   "dependencies": {
     "playwright": "^1.55.0",

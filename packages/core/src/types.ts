@@ -1,3 +1,5 @@
+import type { RulePlugin } from './plugins.js';
+
 export type Severity = 'high' | 'medium' | 'low';
 export type Confidence = 'confirmed' | 'needs-review';
 export type Category = 'layout' | 'runtime' | 'resources' | 'navigation' | 'accessibility' | 'plugin';
@@ -46,6 +48,7 @@ export interface ScanOptions {
   timeoutMs?: number;
   maxPages?: number;
   accessibility?: boolean;
+  plugins?: readonly RulePlugin[];
 }
 
 export const DEFAULT_VIEWPORTS: Viewport[] = [

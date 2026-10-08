@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   scanSite,
   writeReports,
+  validateRulePlugin,
+  type RulePlugin,
   type Severity,
   type Viewport
 } from '@breakmyapp/core';
@@ -19,6 +22,7 @@ const USAGE = [
   '  --viewport <W>x<H>      Test a viewport (repeatable; defaults: 375x812, 768x1024, 1440x900)',
   '  --timeout-ms <number>   Navigation timeout (default: 20000)',
   '  --a11y                  Audit WCAG A/AA with axe-core (opt-in)',
+  '  --plugin <file.mjs>     Execute a trusted local rule (repeatable)',
   '  --crawl                 Discover and scan up to 5 same-origin pages',
   '  --max-pages <number>    Bounded crawl, 1–25 pages (implies --crawl)',
   '  --fail-on <severity>    Non-zero exit if finding is high, medium, or any',
@@ -40,6 +44,7 @@ interface Parsed {
   timeoutMs: number;
   maxPages: number;
   accessibility: boolean;
+  pluginPaths: string[];
   failOn?: Threshold;
 }
 
@@ -61,6 +66,7 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   let timeoutMs = 20000;
   let maxPages = 1;
   let accessibility = false;
+  const pluginPaths: string[] = [];
   let explicitMaxPages = false;
   let failOn: Threshold | undefined;
 
@@ -75,6 +81,8 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
       (viewports ??= []).push({ width: Number(match[1]), height: Number(match[2]) });
     } else if (part === '--a11y') {
       accessibility = true;
+    } else if (part === '--plugin') {
+      pluginPaths.push(requiredValue(args, i++, part));
     } else if (part === '--crawl') {
       if (!explicitMaxPages) maxPages = 5;
     } else if (part === '--max-pages') {
@@ -100,7 +108,9 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 25) {
     throw new Error('--max-pages must be an integer between 1 and 25.');
   }
-  return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages, accessibility, failOn };
+  if (pluginPaths.length > 10) throw new Error('Only up to 10 plugins are supported per scan.');
+  return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages,
+    accessibility, pluginPaths, failOn };
 }
 
 function shouldFail(severities: Severity[], threshold?: Threshold): boolean {
@@ -120,9 +130,16 @@ async function main(): Promise<void> {
     console.log('0.1.0');
     return;
   }
+  const plugins: RulePlugin[] = [];
+  for (const path of parsed.pluginPaths) {
+    // Opt-in, trusted local modules only. They execute with full Node.js privileges.
+    const module = await import(pathToFileURL(resolve(path)).href);
+    validateRulePlugin(module.default);
+    plugins.push(module.default);
+  }
   console.log('\nBreakMyApp v0.1.0 — scanning ' + parsed.url);
   console.log('Browser: Chromium | Local report: ' + parsed.outputDir + '\n');
-  const result = await scanSite(parsed);
+  const result = await scanSite({ ...parsed, plugins });
   await writeReports(result, parsed.outputDir);
   const high = result.findings.filter(f => f.severity === 'high').length;
   const medium = result.findings.filter(f => f.severity === 'medium').length;
