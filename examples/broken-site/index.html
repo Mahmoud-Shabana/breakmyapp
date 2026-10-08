@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/intentionally-missing.css" />
+  <title>BreakMyApp Demo: Intentionally Broken</title>
+  <style>
+    body { margin:0; background:#101728; color:#f2f5fc; font:16px/1.6 system-ui,sans-serif; }
+    header { padding:3rem 2rem; background:#17243a; }
+    main { padding:2rem; }
+    .wide-card { width:1000px; max-width:none; padding:1.5rem; background:#26364f; border:2px solid #e1a05a; }
+    code { color:#a4efca; }
+  </style>
+</head>
+<body>
+  <header><h1>Beautiful? Not on every screen.</h1><p>An intentionally broken site for local testing.</p></header>
+  <main>
+    <img src="/intentionally-missing.png" alt="Intentionally missing demo resource">
+    <div class="wide-card">
+      <h2>This card causes horizontal overflow on mobile</h2>
+      <p>Run <code>breakmyapp scan http://127.0.0.1:4173</code> to find it.</p>
+    </div>
+  </main>
+  <script>setTimeout(() => { throw new Error('Demo: intentional JavaScript crash'); }, 50);</script>
+</body>
+</html>
