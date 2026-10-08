@@ -52,3 +52,7 @@ Use `npm run demo` followed by `npm run scan -- http://127.0.0.1:4173 --crawl --
 ## Community rules
 
 See [docs/plugins.md](docs/plugins.md) and [the meta-description example](examples/plugins/meta-description.mjs). Add deterministic rules and positive/negative fixtures. Default to needs-review for ambiguous problems. The SDK is experimental. Never run untrusted code on your personal machine.
+
+## Reproduction Packs
+
+New repro rules need deterministic assertions and unit tests in `packages/core/src/test/repro.test.ts`. Avoid embedding untrusted strings as executable JavaScript. Generated scripts must be reviewed before running, and traces must not be committed without inspecting private data. See [docs/reproduction.md](docs/reproduction.md).

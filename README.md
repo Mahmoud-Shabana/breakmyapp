@@ -18,6 +18,7 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - ♿ **Opt-in accessibility auditing** using axe-core and per-element WCAG guidance.
 - 🧩 **Local community rule plugins** to add custom checks without modifying the core.
 - 🔎 **Opt-in same-origin crawling**, up to 25 pages, with conservative URL filtering and per-page evidence.
+- 🎬 **Opt-in Reproduction Packs** — runnable Playwright-powered Node.js tests plus browser Trace ZIPs.
 - 📸 **Visual evidence**, captured for viewport(s) where findings occur.
 - 📄 **Offline HTML and machine-readable JSON reports**, stored on your own machine.
 - 🛠 **CI-friendly exit codes** with an opt-in --fail-on severity threshold.
@@ -75,6 +76,15 @@ Then scan it in terminal two:
 npm run scan -- http://127.0.0.1:4173
 ~~~
 
+To generate and locally replay evidence for the authorized demo:
+
+~~~bash
+npm run scan -- http://127.0.0.1:4173 --viewport 375x812 --evidence
+npm run test:repros
+~~~
+
+`--repro` generates runnable Playwright-based **Node.js test-runner** scripts; `--trace` records browser traces; `--evidence` enables both. Traces may contain sensitive page data and are not automatically redacted. See [Reproduction Packs](docs/reproduction.md).
+
 Try the accessibility audit and an opt-in local plugin:
 
 ~~~bash
@@ -111,7 +121,7 @@ Use **npm test** for TypeScript build and unit tests. After installing Chromium,
 
 ## What you'll get
 
-- A local, readable HTML report with finding cards, severity labels and screenshots.
+- A local, readable HTML report with finding cards, severity labels and screenshots, plus opt-in links to repro tests and trace ZIPs.
 - A structured JSON report with rule IDs, page URLs, tested pages, viewports, evidence and page-aware finding fingerprints.
 - Meaningful exit codes: 0 for successful scan (unless --fail-on triggers); 1 for operational errors; 2 for requested severity threshold.
 
@@ -132,6 +142,7 @@ Learn more in [docs/architecture.md](docs/architecture.md) and [docs/crawling.md
 - [x] Bounded same-origin page discovery with per-page evidence and Studio comparison.
 - [x] Integrate opt-in axe-core WCAG A/AA checks (developer preview).
 - [ ] Add baselines for image-diff visual regression.
+- [x] Generate opt-in reproduction scripts for supported findings and trace ZIPs.
 - [x] Implement the initial opt-in local rule SDK with an example plugin.
 - [ ] Stabilize the SDK with isolation and a vetted community rules catalog.
 - [ ] Optional AI-assisted explanations (without requiring an API key).

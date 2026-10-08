@@ -47,3 +47,7 @@ The HTML report is built from escaped text with no external dependencies. Screen
 The optional --a11y flag invokes @axe-core/playwright against each loaded viewport. It normalizes results to per-element findings, with axe impact, failure text and a trusted Deque guidance URL. Automation does not establish WCAG compliance.
 
 The optional --plugin flag imports local trusted .mjs JavaScript modules exposing check({page,url,viewport}); see [plugins.md](plugins.md). Plugins have full Node.js privileges and are not sandboxed.
+
+## Reproduction Packs
+
+`packages/core/src/repro.ts` maps selected structured findings to Node.js test-runner scripts using Playwright, capped at 100 files per scan. Opt-in `BrowserContext.tracing` saves operations, DOM snapshots and screenshots in ZIP archives for viewports with findings. Browser traces do not store test assertions. See [reproduction.md](reproduction.md).

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { scanSite } from '../scan.js';
 import { writeReports } from '../report.js';
+import { writeReproductionPacks } from '../repro.js';
 
 test('rejects unsupported target protocols before launching a browser', async () => {
   await assert.rejects(
@@ -48,6 +49,7 @@ test('detects real overflow and page errors in Chromium', {
       viewports: [{ width: 375, height: 812 }],
       maxPages: 2,
       accessibility: true,
+      trace: true,
       plugins: [{
         id: 'community.test-rule',
         description: 'Records a plugin finding',
@@ -76,6 +78,15 @@ test('detects real overflow and page errors in Chromium', {
       f.description.includes('/missing.png')));
     assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&
       f.description.includes('/missing.css')));
+    const generated = await writeReproductionPacks(report, dir);
+    assert.ok(generated >= 2, 'expected generated reproduction tests');
+    const traced = report.findings.find(f => f.evidence?.trace);
+    assert.ok(traced, 'expected trace evidence for a finding');
+    const zip = await readFile(join(dir, traced.evidence!.trace!));
+    assert.equal(zip.subarray(0, 2).toString(), 'PK', 'trace should be a ZIP');
+    const repro = report.findings.find(f => f.evidence?.repro);
+    assert.ok(repro);
+    assert.match(await readFile(join(dir, repro.evidence!.repro!), 'utf8'), /chromium\.launch/);
     await writeReports(report, dir);
     const raw = await readFile(join(dir, 'report.json'), 'utf8');
     assert.equal(JSON.parse(raw).schemaVersion, 1);

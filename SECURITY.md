@@ -25,3 +25,7 @@ The `--crawl` / `--max-pages` modes are bounded to 25 URLs and follow only same-
 ## Local plugin execution
 
 Custom --plugin modules execute with full Node.js and Playwright permissions, **not inside a sandbox**. A plugin can access local files, credentials and networks. Only run plugins you wrote or audited, preferably within an isolated environment. Never execute arbitrary community plugin URLs or auto-install plugin code.
+
+## Reproduction Packs
+
+The `--trace` and `--evidence` options record Playwright traces that can contain page data, network information and private content **without redaction**. Artifacts are local and ignored by Git, but do not publicly share them without manual inspection. The `--repro` and `--evidence` options generate executable tests that revisit the original page, executing its JavaScript and requests. Only run on sites you own or have permission to test. Generated test URLs drop queries and credentials for privacy; some authenticated cases may not reproduce.

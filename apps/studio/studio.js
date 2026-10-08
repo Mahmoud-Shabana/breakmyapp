@@ -78,7 +78,9 @@ function showDetail(f){
    }
   }catch{/* Ignore untrusted imported links. */}
  }
- if(f.evidence?.screenshot)box.append(el('p','Screenshot: '+f.evidence.screenshot+'. Open the original scanner HTML report to see images.'));
+ if(f.evidence?.screenshot)box.append(el('p','Screenshot: '+f.evidence.screenshot+'. Open the scanner HTML report to see images.'));
+ if(f.evidence?.repro)box.append(el('p','Playwright reproducer: '+f.evidence.repro+'. Open the scanner report to download.'));
+ if(f.evidence?.trace)box.append(el('p','Browser trace: '+f.evidence.trace+'. Open the scanner report to download.'));
  const actions=el('div','','detail-actions');const copy=el('button','Copy GitHub issue');
  copy.addEventListener('click',async()=>{
  const value=makeIssue(f,state.current.target);
