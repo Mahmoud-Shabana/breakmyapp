@@ -20,7 +20,9 @@ test('detects real overflow and page errors in Chromium', {
   const html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>body{margin:0}.box{width:1000px;height:200px;background:tomato}</style><link rel="stylesheet" href="/missing.css"></head>' +
     '<body><a href="/child">Child page</a><a href="/logout">Do not crawl logout</a><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
+  let sawExplicitQuery = false;
   const server = createServer((req, res) => {
+    if (req.url === '/?preview=true') sawExplicitQuery = true;
     if (req.url === '/child') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
@@ -66,6 +68,34 @@ test('detects real overflow and page errors in Chromium', {
     await writeReports(report, dir);
     const raw = await readFile(join(dir, 'report.json'), 'utf8');
     assert.equal(JSON.parse(raw).schemaVersion, 1);
+  } finally {
+    await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('single-page scans preserve required query params but redact them from the report', {
+  skip: process.env.BREAKMYAPP_BROWSER_TESTS !== '1'
+}, async () => {
+  let sawQuery = false;
+  const server = createServer((req, res) => {
+    if (req.url === '/?preview=yes') sawQuery = true;
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<!doctype html><html><body><h1>Query fixture</h1></body></html>');
+  });
+  const dir = await mkdtemp(join(tmpdir(), 'breakmyapp-query-'));
+  try {
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    const addr = server.address();
+    assert.ok(addr && typeof addr !== 'string');
+    const report = await scanSite({
+      url: 'http://127.0.0.1:' + addr.port + '/?preview=yes',
+      outputDir: dir,
+      viewports: [{ width: 375, height: 812 }]
+    });
+    assert.equal(sawQuery, true);
+    assert.ok(!report.target.includes('preview=yes'));
+    assert.ok(!report.pagesScanned?.[0].includes('preview=yes'));
   } finally {
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     await rm(dir, { recursive: true, force: true });

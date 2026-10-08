@@ -170,9 +170,12 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           if (problem) resourceProblems.push(problem);
         });
         const firstIndex = findings.length;
+        // Preserve explicitly supplied query parameters in single-page scans.
+        // The report still records a redacted page URL.
+        const navigationUrl = (options.maxPages ?? 1) === 1 ? url : current;
         let response: Awaited<ReturnType<typeof page.goto>>;
         try {
-          response = await page.goto(current, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+          response = await page.goto(navigationUrl, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
           await page.waitForTimeout(300);
         } catch (error) {
           // A failed discovered page should not discard evidence from other pages.
