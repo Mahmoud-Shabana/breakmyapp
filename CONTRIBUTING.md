@@ -64,3 +64,7 @@ The pixel comparison implementation is in `packages/core/src/visual.ts`. It uses
 ## Release quality gate
 
 Run `npm run test:offline` first to verify the dependency-free tools, then `npm install`, `npx playwright install chromium`, and `npm run verify:release`. Do not claim the CLI has been validated end-to-end based only on unit tests. Follow [docs/release-checklist.md](docs/release-checklist.md). Avoid submitting private screenshots or traces.
+
+## Test the distributable tarball
+
+Use `npm run test:consumer:fixture` for an offline, zero-external-dependency package installation test; it builds and executes a synthetic compiled CLI in a clean consumer. After installing the real workspace dependencies and Chromium, run `npm run test:consumer` to pack and install the actual compiled product in a disposable temporary consumer. A successful fixture is **not** proof that the real scanner's dependencies, browser and native Sharp binaries install correctly. Never publish or tag a release without a clean environment verification.

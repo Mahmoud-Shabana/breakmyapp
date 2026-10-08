@@ -18,7 +18,9 @@ npm run doctor
 npm run test:browser
 npm run package:preview
 npm run test:package
+npm run test:consumer:fixture
 npm pack --dry-run .breakmyapp/package-preview
+npm run test:consumer
 npm run verify:release
 ```
 
@@ -27,7 +29,9 @@ npm run verify:release
 - `npm run doctor`: verify Node runtime, required packages, installed Chromium, compiled entrypoints and Studio. Returns nonzero on failed checks. `node scripts/doctor.mjs --json` generates machine-readable output.
 - `npm test`: builds core/CLI, runs core unit tests including visual and reproduction logic, then runs offline tests.
 - `npm run test:browser`: performs real Chromium integration checks for crawling, accessibility, plugins, trace ZIPs, replay files, and visual regression. It requires a usable Chromium installation.
-- `npm run verify:release`: executes the full local gates and must finish with exit code 0.
+- `npm run test:consumer:fixture`: packs a synthetic runtime without external dependencies, installs its tarball in an isolated consumer with `--offline`, and verifies its CLI `--help`/`--version` entrypoints.
+- `npm run test:consumer`: creates the **real workspace** CLI package, packs it, installs it into a clean temporary project with public runtime dependencies, and runs `--version` and `--help`. This needs access to npm Registry or previously cached compatible packages.
+- `npm run verify:release`: executes the full local gates, including a clean consumer install, and must finish with exit code 0.
 
 ## User-facing smoke test
 
@@ -58,7 +62,8 @@ Inspect baseline/current/diff images and the recorded mismatch ratio.
 - [ ] Review default trace/screenshot privacy, plugin trust boundary and generated scripts.
 - [ ] Confirm that the `@breakmyapp` npm organization/scope is owned and controlled by the maintainer. Both workspace packages are intentionally `private: true`; do **not** publish them prematurely. Establish a package publishing strategy before removing `private`.
 - [x] Create a **private local packaging preview** from the compiled CLI and core; `npm pack --dry-run` is covered by a fixture test.
-- [ ] Run `npm run package:preview` after installing all dependencies, inspect **actual repository** tarball contents, and install the packed CLI in an unrelated clean directory with npm registry access.
+- [x] Verify a synthetic package can be packed, installed and executed inside an unrelated temporary consumer with **no npm Registry access**.
+- [ ] Run `npm run test:consumer` on the **actual compiled repository with real public dependencies** (not just synthetic fixtures), on a clean machine, and verify full Chromium scanning.
 - [ ] Mark a release tag only after verifying reproducibility and documenting limitations.
 
 GitHub Actions status is not a substitute for running these gates. If CI is blocked, use the local commands and attach redacted logs to the release discussion.

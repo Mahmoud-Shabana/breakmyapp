@@ -21,10 +21,12 @@
     "test:repros": "node scripts/run-repros.mjs",
     "demo:visual": "node examples/visual-regression/server.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "test:offline": "node --test scripts/doctor.test.mjs apps/studio/analysis.test.mjs scripts/studio-server.test.mjs examples/plugins/meta-description.test.mjs scripts/package-preview.test.mjs",
-    "verify:release": "npm run build && npm run doctor && npm test && npm run test:browser && npm run package:preview && npm pack --dry-run .breakmyapp/package-preview",
+    "test:offline": "node --test scripts/doctor.test.mjs apps/studio/analysis.test.mjs scripts/studio-server.test.mjs examples/plugins/meta-description.test.mjs scripts/package-preview.test.mjs scripts/package-consumer-smoke.test.mjs",
+    "verify:release": "npm run build && npm run doctor && npm test && npm run test:browser && npm run test:consumer",
     "package:preview": "npm run build && node scripts/package-preview.mjs",
-    "test:package": "node --test scripts/package-preview.test.mjs"
+    "test:package": "node --test scripts/package-preview.test.mjs",
+    "test:consumer:fixture": "node --test scripts/package-consumer-smoke.test.mjs",
+    "test:consumer": "npm run package:preview && node scripts/package-consumer-smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
