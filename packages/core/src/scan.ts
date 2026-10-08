@@ -3,6 +3,12 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import {
+  dedupeResourceProblems,
+  problemFromHttpResponse,
+  problemFromNetworkFailure,
+  type ResourceProblem
+} from './resources.js';
+import {
   DEFAULT_VIEWPORTS,
   type Finding,
   type ScanOptions,
@@ -125,8 +131,24 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
       try {
         const page = await context.newPage();
         const errors: string[] = [];
+        const resourceProblems: ResourceProblem[] = [];
         page.on('pageerror', error => {
           if (errors.length < 20) errors.push(error.message);
+        });
+        // Register listeners before navigation; otherwise early failures are missed.
+        page.on('response', response => {
+          if (resourceProblems.length >= 200) return;
+          const problem = problemFromHttpResponse(
+            response.url(), response.request().resourceType(), response.status()
+          );
+          if (problem) resourceProblems.push(problem);
+        });
+        page.on('requestfailed', request => {
+          if (resourceProblems.length >= 200) return;
+          const problem = problemFromNetworkFailure(
+            request.url(), request.resourceType(), request.failure()?.errorText
+          );
+          if (problem) resourceProblems.push(problem);
         });
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
         await page.waitForTimeout(300);
@@ -163,6 +185,24 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
             description: message.slice(0, 500),
             viewport,
             evidence: { detail: 'Captured via the browser pageerror event.' }
+          }));
+        }
+
+        for (const problem of dedupeResourceProblems(resourceProblems)) {
+          findings.push(newFinding({
+            ruleId: 'resources.' + problem.kind,
+            category: 'resources',
+            severity: 'medium',
+            confidence: 'needs-review',
+            title: problem.kind === 'http-error'
+              ? 'Static resource returned an HTTP error'
+              : 'Static resource failed to load',
+            description: problem.resourceType + ' at ' + problem.address +
+              ' (' + problem.reason + ')',
+            viewport,
+            evidence: {
+              detail: 'Observed by browser network events. Some resources may be optional or intentionally unavailable.'
+            }
           }));
         }
 
