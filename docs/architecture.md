@@ -25,7 +25,7 @@ Each finding carries a ruleId, severity, confidence, viewport, stable-ish finger
 
 **navigation.http-error** reports 4xx/5xx status codes returned by the main document; unlike asset failures, a failed main navigation is a high-severity confirmed result.
 
-**layout.horizontal-overflow** measures document scrollWidth versus viewport width, and identifies up to five candidate elements whose bounding boxes extend outside the viewport. The first candidate is included in evidence. This can be a valid intentional design (such as a carousel); users must inspect the screenshot.
+**layout.horizontal-overflow** measures document scrollWidth versus viewport width, and identifies up to five candidate elements whose bounding boxes extend outside the viewport. Up to five candidate elements are included in structured evidence and the HTML report. Because overflow can be a valid intentional design (such as a carousel), its confidence is needs-review; users must inspect the screenshot.
 
 **resources.http-error** and **resources.network-error** observe image, script and stylesheet requests. The report strips query parameters and credentials from asset URLs, deduplicates repeats and excludes canceled requests. Findings are labelled needs-review because some failed resources may be optional or intentionally missing.
 

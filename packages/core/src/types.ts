@@ -20,6 +20,7 @@ export interface Finding {
   evidence?: {
     screenshot?: string;
     detail?: string;
+    candidates?: Array<{ selector: string; overflowPx: number }>;
   };
 }
 

@@ -39,7 +39,10 @@ test('detects real overflow and page errors in Chromium', {
       outputDir: dir,
       viewports: [{ width: 375, height: 812 }]
     });
-    assert.ok(report.findings.some(f => f.ruleId === 'layout.horizontal-overflow'));
+    const overflow = report.findings.find(f => f.ruleId === 'layout.horizontal-overflow');
+    assert.ok(overflow);
+    assert.equal(overflow.confidence, 'needs-review');
+    assert.ok(overflow.evidence?.candidates?.length);
     assert.ok(report.findings.some(f => f.ruleId === 'runtime.uncaught-error'));
     assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&
       f.description.includes('/missing.png')));

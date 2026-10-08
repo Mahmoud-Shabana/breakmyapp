@@ -54,3 +54,18 @@ test('reporter ignores screenshot URLs outside the generated evidence directory'
   const html = renderHtmlReport(modified);
   assert.ok(!html.includes('javascript:alert(1)'));
 });
+
+test('overflow candidates are rendered and escaped', () => {
+  const html = renderHtmlReport({
+    ...example,
+    findings: [{
+      ...example.findings[0],
+      evidence: {
+        candidates: [{ selector: '<img src=x onerror=alert(1)>', overflowPx: 42 }]
+      }
+    }]
+  });
+  assert.match(html, /Possible overflow elements/);
+  assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
+});

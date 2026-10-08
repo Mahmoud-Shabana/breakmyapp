@@ -27,6 +27,13 @@ function renderFinding(finding: Finding): string {
       '"><img loading="lazy" src="' + escapeHtml(screenshotPath) +
       '" alt="Screenshot for ' + escapeHtml(finding.title) + '"></a>'
     : '';
+  const candidates = finding.evidence?.candidates?.length
+    ? '<details><summary>Possible overflow elements (' + finding.evidence.candidates.length +
+      ')</summary><ol>' + finding.evidence.candidates.map(candidate =>
+        '<li><code>' + escapeHtml(candidate.selector) + '</code> (' +
+        candidate.overflowPx + 'px beyond viewport)</li>'
+      ).join('') + '</ol></details>'
+    : '';
   return '<article class="issue">' +
     '<div class="issue-head"><span class="pill ' + finding.severity + '">' + label +
     '</span><span class="muted">' + finding.viewport.width + ' × ' +
@@ -39,7 +46,7 @@ function renderFinding(finding: Finding): string {
       escapeHtml(finding.selector) + '</code></p>' : '') +
     (finding.evidence?.detail ? '<p class="muted">' +
       escapeHtml(finding.evidence.detail) + '</p>' : '') +
-    image + '</article>';
+    candidates + image + '</article>';
 }
 
 export function renderHtmlReport(result: ScanResult): string {
@@ -68,6 +75,8 @@ export function renderHtmlReport(result: ScanResult): string {
     '.high{color:#ffc0c0;background:#5a2832}.medium{color:#ffe3a1;background:#5c4725}.low{color:#b4e7fc;background:#24495a}',
     'code{color:#b7dfd8}.selector{font-size:14px}',
     'img{display:block;max-width:100%;width:650px;border-radius:12px;border:1px solid #334862;margin-top:20px}',
+    'details{color:#b8c7dc;font-size:14px;margin-top:12px}summary{cursor:pointer;font-weight:600}',
+    'details li{margin:6px 0;overflow-wrap:anywhere}',
     '.empty{padding:35px;border:1px dashed #35516b;border-radius:14px;color:#a5b4cb}',
     'footer{margin-top:55px;color:#8293ad;font-size:12px}',
     '@media(max-width:620px){.stats{grid-template-columns:1fr 1fr}main{padding:30px 16px}}'

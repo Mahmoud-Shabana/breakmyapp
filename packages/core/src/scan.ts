@@ -174,16 +174,18 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
             ruleId: 'layout.horizontal-overflow',
             category: 'layout',
             severity: 'medium',
-            confidence: 'confirmed',
-            title: 'Unexpected horizontal page overflow',
+            confidence: 'needs-review',
+            title: 'Horizontal page overflow detected',
             description: 'The document is ' + probe.overflowPx +
               'px wider than the viewport. This may hide content on small screens.',
             viewport,
             selector: candidate?.selector,
             evidence: {
-              detail: candidate
-                ? 'Largest visible candidate extends ' + candidate.rightPx + 'px beyond the viewport.'
-                : 'Document scrollWidth exceeds viewport width.'
+              detail: 'The overflow is measurable, but may be intentional (for example, a carousel). Verify the candidate elements.',
+              candidates: probe.candidates.map(({ selector, rightPx }) => ({
+                selector,
+                overflowPx: rightPx
+              }))
             }
           }));
         }
