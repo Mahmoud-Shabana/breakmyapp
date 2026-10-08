@@ -3,14 +3,20 @@
   "private": true,
   "version": "0.1.0",
   "description": "Find, prove and reproduce bugs in your websites.",
-  "workspaces": ["packages/*"],
-  "engines": { "node": ">=20" },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm run build --workspace @breakmyapp/core && npm run build --workspace @breakmyapp/cli",
     "test": "npm run build && npm run test --workspace @breakmyapp/core",
     "test:browser": "npm run build && node scripts/run-browser-tests.mjs",
     "scan": "npm run build && node packages/cli/dist/index.js",
-    "demo": "node examples/broken-site/server.mjs"
+    "demo": "node examples/broken-site/server.mjs",
+    "studio": "node scripts/studio-server.mjs",
+    "test:studio": "node --test apps/studio/analysis.test.mjs scripts/studio-server.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

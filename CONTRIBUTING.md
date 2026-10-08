@@ -38,3 +38,8 @@ Rule results should distinguish **confirmed**, reproducible failures from **need
 ## Community expectations
 
 No harassment, spam, scraping of private data or testing websites without authorization. Follow responsible disclosure for security issues.
+
+
+## Contributing to Studio
+
+Studio lives in `apps/studio/` and runs using `npm run studio`. It does not need Playwright or a build step. Run `npm run test:studio` for its dependency-free comparison and server checks. Keep imported strings as DOM text, preserve local-only processing, and clearly label synthetic data.

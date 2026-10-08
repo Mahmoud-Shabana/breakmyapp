@@ -4,7 +4,7 @@
 
 BreakMyApp is an open-source, local-first website bug scanner. It uses a real Chromium browser to collect **evidence**, not guesses: responsive overflow, uncaught JavaScript errors, failed static resources, and screenshots you can inspect offline.
 
-> **Status: early developer preview (v0.1.0).** Not published to npm yet. The project is actively being built; the first release is intentionally limited in scope.
+> **Status: developer preview (scanner v0.1.0, Studio v0.2 preview).** Not published to npm yet. The project is actively being built; the first release is intentionally limited in scope.
 
 ## What's working
 
@@ -17,6 +17,32 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - 🔒 **Local-first:** no account, AI API key, or hosted backend is required.
 
 This release does **not** crawl an entire site, replay arbitrary user journeys, verify button behavior or diagnose visual regressions. A clean report does not mean a bug-free application.
+
+## 🧭 Studio — visualize and compare scans
+
+**BreakMyApp Studio** is a standalone, local-first forensic dashboard. Import scan JSON files from your machine, visually explore findings, and compare today's report to a previous baseline.
+
+**Run it locally** (Node.js 20+; no install, build, CI, API key, or Playwright required for Studio itself):
+
+```bash
+npm run studio
+```
+
+Open **http://127.0.0.1:4174**. Click **Explore sample report** for an illustrative comparison, or **Open scan report** to import a real `.breakmyapp/report.json`. Import an older scan using **Add baseline** to detect new, existing and resolved findings.
+
+- Severity and change filters, search, viewport and diagnostic evidence inspector
+- New / existing / resolved finding comparison (heuristic, review before acting)
+- Export Markdown summaries and GitHub issue descriptions
+- Browser-local JSON analysis with escaped DOM content and restrictive Content Security Policy
+- Zero-dependency local test runner
+
+Browsers cannot automatically load screenshots from arbitrary paths found in imported JSON files. For images, open the scanner-generated `.breakmyapp/index.html` report alongside Studio.
+
+```bash
+npm run test:studio
+```
+
+---
 
 ## Quick start
 

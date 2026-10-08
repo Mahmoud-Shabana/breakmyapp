@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BreakMyApp Studio — Bug forensics, locally</title>
+<meta name="description" content="Visualize and compare website bug reports with BreakMyApp Studio.">
+<link rel="stylesheet" href="/style.css">
+<script type="module" src="/studio.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<a class="brand" href="/"><span class="logo">B/</span><span>breakmyapp<small>STUDIO <b>v0.2</b></small></span></a>
+<p class="nav-label">WORKSPACE</p>
+<nav aria-label="Workspace">
+<button class="nav active" id="nav-overview"><span>◫</span> Overview</button>
+<button class="nav" id="nav-findings"><span>≡</span> Findings</button>
+<button class="nav" id="nav-compare"><span>⇄</span> Compare scans</button>
+</nav>
+<div class="sidebar-bottom"><div class="privacy"><span class="shield">⬡</span><strong>Local by design</strong><p>Your JSON reports never leave your browser. No account, no cloud, no telemetry.</p><small>● PRIVATE SESSION</small></div><a class="github" target="_blank" rel="noopener noreferrer" href="https://github.com/Mahmoud-Shabana/breakmyapp">View source on GitHub ↗</a></div>
+</aside>
+<div class="work">
+<header class="topbar"><span>Workspace <i>/</i> <strong id="crumb">Overview</strong></span><div><span class="online">● All processing is local</span><span class="profile">B/</span></div></header>
+<main>
+<section class="hero">
+<div class="hero-copy"><span class="eyebrow">● YOUR SOFTWARE, UNDER THE MICROSCOPE</span><h1>Find the bugs.<br><em>See the proof.</em></h1><p>Turn browser scans into clarity. Discover what broke, what changed, and where to look — privately on your machine.</p><div class="hero-buttons"><button class="primary" id="load-scan">↥ &nbsp; Open scan report <small>.json</small></button><button class="secondary" id="try-sample">Explore sample report ↗</button></div></div>
+<div class="terminal" aria-hidden="true"><div class="terminal-head"><span class="dots">● ● ●</span> analysis.scan</div><div class="terminal-body"><div><span>01</span> scan(<b>"localhost:3000"</b>)</div><div><span>02</span> &nbsp; viewport: <i>375px</i></div><div><span>03</span> &nbsp; checks: [layout, runtime]</div><div class="error-line"><span>04</span> <i>✕ horizontal overflow +42px</i></div><div><span>05</span> <b>✓ evidence captured</b></div></div></div>
+</section>
+<div class="load-status"><div class="target"><span class="green-dot"></span><strong id="report-name">Sample workspace</strong><span id="report-target">Illustrative data · not a live scan</span></div><div class="load-actions"><button id="load-baseline">⇄ Add baseline</button><button id="download-summary">↓ Export summary</button></div></div>
+<section class="stats" aria-label="Report totals">
+<div class="stat"><div class="stat-label">ACTIVE FINDINGS <span>▣</span></div><strong id="count-total">0</strong><p>Across tested viewports</p></div>
+<div class="stat"><div class="stat-label">HIGH PRIORITY <span class="red">!</span></div><strong id="count-high">0</strong><p>Needs attention first</p></div>
+<div class="stat"><div class="stat-label">NEW SINCE BASELINE <span class="orange">↗</span></div><strong id="count-new">—</strong><p>Compare scans to see</p></div>
+<div class="stat"><div class="stat-label">RESOLVED ISSUES <span class="mint">✓</span></div><strong id="count-resolved">—</strong><p>Fixed since last scan</p></div>
+</section>
+<section id="findings" class="findings">
+<div class="section-title"><div><span class="subheading">DETAILED ANALYSIS</span><h2>Findings <span id="total-visible">0</span></h2><p>Filter issues, inspect evidence and export ready-to-review GitHub issues.</p></div><span class="tip">Select a finding for details ↘</span></div>
+<div class="toolbar"><label class="search">⌕ <input id="search" type="search" placeholder="Search findings, rules, selectors…" aria-label="Search findings"></label><label>Severity <select id="severity"><option value="all">All levels</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label><label>Change <select id="change"><option value="all">All findings</option><option value="new">New</option><option value="existing">Existing</option><option value="resolved">Resolved</option><option value="uncompared">Uncompared</option></select></label></div>
+<div class="findings-grid"><div class="items" id="items" aria-live="polite"></div><aside class="inspector" id="inspector"><div class="empty"><span>◎</span><strong>Select a finding</strong><p>Rule details and evidence appear here.</p></div></aside></div>
+</section>
+<footer>BREAKMYAPP / STUDIO <span>Open source · No tracking · Made for builders</span></footer>
+</main></div></div>
+<input id="scan-file" type="file" accept=".json,application/json" hidden><input id="baseline-file" type="file" accept=".json,application/json" hidden>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>
