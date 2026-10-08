@@ -12,3 +12,5 @@ export type {
 } from './types.js';
 export { problemFromHttpResponse, problemFromNetworkFailure, redactedResourceUrl, dedupeResourceProblems } from './resources.js';
 export type { ResourceProblem, StaticResourceType } from './resources.js';
+
+export { PageQueue, eligiblePageUrl } from './crawl.js';

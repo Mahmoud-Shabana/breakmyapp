@@ -16,6 +16,7 @@ export interface Finding {
   title: string;
   description: string;
   viewport: Viewport;
+  pageUrl?: string;
   selector?: string;
   evidence?: {
     screenshot?: string;
@@ -32,6 +33,7 @@ export interface ScanResult {
   startedAt: string;
   finishedAt: string;
   viewports: Viewport[];
+  pagesScanned?: string[];
   findings: Finding[];
 }
 
@@ -40,6 +42,7 @@ export interface ScanOptions {
   outputDir: string;
   viewports?: Viewport[];
   timeoutMs?: number;
+  maxPages?: number;
 }
 
 export const DEFAULT_VIEWPORTS: Viewport[] = [

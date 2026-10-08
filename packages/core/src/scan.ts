@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { PageQueue } from './crawl.js';
 import {
   dedupeResourceProblems,
   problemFromHttpResponse,
@@ -124,12 +125,30 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
   await mkdir(join(options.outputDir, 'screenshots'), { recursive: true });
 
   const findings: Finding[] = [];
+  const pagesScanned: string[] = [];
+  const queue = new PageQueue(url, options.maxPages ?? 1);
+  const targetOrigin = new URL(url).origin;
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const viewport of viewports) {
+    let current: string | undefined;
+    while ((current = queue.next()) !== undefined) {
+      pagesScanned.push(current);
+      for (const viewport of viewports) {
       const context = await browser.newContext({ viewport });
       try {
         const page = await context.newPage();
+        // Do not follow a page redirect that leaves the explicitly chosen origin.
+        await page.route('**/*', route => {
+          if (!route.request().isNavigationRequest()) return route.continue();
+          try {
+            if (new URL(route.request().url()).origin !== targetOrigin) {
+              return route.abort('blockedbyclient');
+            }
+          } catch {
+            return route.abort('blockedbyclient');
+          }
+          return route.continue();
+        });
         const errors: string[] = [];
         const resourceProblems: ResourceProblem[] = [];
         page.on('pageerror', error => {
@@ -150,9 +169,35 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           );
           if (problem) resourceProblems.push(problem);
         });
-        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
-        await page.waitForTimeout(300);
         const firstIndex = findings.length;
+        let response: Awaited<ReturnType<typeof page.goto>>;
+        try {
+          response = await page.goto(current, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+          await page.waitForTimeout(300);
+        } catch (error) {
+          // A failed discovered page should not discard evidence from other pages.
+          if (pagesScanned.length === 1 && !findings.length && current === queue.planned[0]) {
+            throw error;
+          }
+          const detail = error instanceof Error ? error.message.slice(0, 250) : String(error).slice(0, 250);
+          findings.push(newFinding({
+            ruleId: 'navigation.failed',
+            category: 'navigation',
+            severity: 'high',
+            confidence: 'needs-review',
+            title: 'Page navigation failed',
+            description: detail,
+            viewport,
+            pageUrl: current
+          }));
+          continue;
+        }
+        if (viewport === viewports[0] && (options.maxPages ?? 1) > 1) {
+          const links = await page.locator('a[href]').evaluateAll(anchors =>
+            anchors.slice(0, 500).map(anchor => (anchor as HTMLAnchorElement).href)
+          );
+          queue.offerMany(links);
+        }
 
         if (response && response.status() >= 400) {
           findings.push(newFinding({
@@ -221,8 +266,13 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           }));
         }
 
+        for (const finding of findings.slice(firstIndex)) {
+          finding.pageUrl = current;
+          finding.id = fingerprint([current, finding.id]);
+        }
         if (findings.length > firstIndex) {
-          const name = viewport.width + 'x' + viewport.height + '.png';
+          const pageKey = createHash('sha256').update(current).digest('hex').slice(0, 12);
+          const name = pageKey + '-' + viewport.width + 'x' + viewport.height + '.png';
           try {
             await page.screenshot({ path: join(options.outputDir, 'screenshots', name), fullPage: false });
             for (const finding of findings.slice(firstIndex)) {
@@ -234,6 +284,7 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
         }
       } finally {
         await context.close();
+      }
       }
     }
   } finally {
@@ -252,6 +303,7 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
     startedAt,
     finishedAt: new Date().toISOString(),
     viewports,
+    pagesScanned,
     findings
   };
 }
