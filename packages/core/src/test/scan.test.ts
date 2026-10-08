@@ -18,10 +18,10 @@ test('detects real overflow and page errors in Chromium', {
   skip: process.env.BREAKMYAPP_BROWSER_TESTS !== '1'
 }, async () => {
   const html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<style>body{margin:0}.box{width:1000px;height:200px;background:tomato}</style></head>' +
+    '<style>body{margin:0}.box{width:1000px;height:200px;background:tomato}</style><link rel="stylesheet" href="/missing.css"></head>' +
     '<body><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
   const server = createServer((req, res) => {
-    if (req.url === '/missing.png') {
+    if (req.url === '/missing.png' || req.url === '/missing.css') {
       res.writeHead(404, { 'content-type': 'text/plain' });
       res.end('Missing intentionally');
       return;
@@ -43,6 +43,8 @@ test('detects real overflow and page errors in Chromium', {
     assert.ok(report.findings.some(f => f.ruleId === 'runtime.uncaught-error'));
     assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&
       f.description.includes('/missing.png')));
+    assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&
+      f.description.includes('/missing.css')));
     await writeReports(report, dir);
     const raw = await readFile(join(dir, 'report.json'), 'utf8');
     assert.equal(JSON.parse(raw).schemaVersion, 1);

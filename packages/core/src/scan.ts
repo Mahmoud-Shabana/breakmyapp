@@ -150,9 +150,22 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           );
           if (problem) resourceProblems.push(problem);
         });
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
         await page.waitForTimeout(300);
         const firstIndex = findings.length;
+
+        if (response && response.status() >= 400) {
+          findings.push(newFinding({
+            ruleId: 'navigation.http-error',
+            category: 'navigation',
+            severity: 'high',
+            confidence: 'confirmed',
+            title: 'Target page returned an HTTP error',
+            description: 'The main document returned HTTP ' + response.status() + '.',
+            viewport,
+            evidence: { detail: 'HTTP status observed on the main navigation response.' }
+          }));
+        }
         const probe = await detectOverflow(page);
 
         if (probe.overflowPx > 2) {

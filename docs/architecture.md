@@ -9,6 +9,7 @@ CLI (@breakmyapp/cli)
           -> responsive overflow probe (DOM measurements)
           -> pageerror listener (runtime failures)
           -> response/requestfailed listeners (static asset failures)
+          -> main navigation HTTP status check
           -> per-viewport screenshot evidence
       -> typed ScanResult v1
   -> HTML and JSON reporter
@@ -21,6 +22,8 @@ ScanResult includes schemaVersion, toolVersion, a sanitized target URL without a
 Each finding carries a ruleId, severity, confidence, viewport, stable-ish fingerprint, explanatory text and optional relative screenshot path. Fingerprints help group similar findings; they are not globally unique issue identifiers.
 
 ## Rule behavior
+
+**navigation.http-error** reports 4xx/5xx status codes returned by the main document; unlike asset failures, a failed main navigation is a high-severity confirmed result.
 
 **layout.horizontal-overflow** measures document scrollWidth versus viewport width, and identifies up to five candidate elements whose bounding boxes extend outside the viewport. The first candidate is included in evidence. This can be a valid intentional design (such as a carousel); users must inspect the screenshot.
 

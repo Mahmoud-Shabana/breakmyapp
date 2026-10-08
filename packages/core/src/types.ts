@@ -1,6 +1,6 @@
 export type Severity = 'high' | 'medium' | 'low';
 export type Confidence = 'confirmed' | 'needs-review';
-export type Category = 'layout' | 'runtime' | 'resources';
+export type Category = 'layout' | 'runtime' | 'resources' | 'navigation';
 
 export interface Viewport {
   width: number;

@@ -9,7 +9,7 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 ## What's working
 
 - 📱 **Responsive overflow detection** at 375×812, 768×1024 and 1440×900, or custom viewport sizes.
-- 🐛 **Browser runtime error tracking** for uncaught JavaScript errors.
+- 🐛 **Browser runtime error tracking** for uncaught JavaScript errors, plus HTTP errors on the main page.
 - 🖼️ **Failed resource detection** for images, scripts and stylesheets returning HTTP 4xx/5xx or experiencing network failures (labelled needs-review).
 - 📸 **Visual evidence**, captured for viewport(s) where findings occur.
 - 📄 **Offline HTML and machine-readable JSON reports**, stored on your own machine.
@@ -42,7 +42,7 @@ Then scan it in terminal two:
 npm run scan -- http://127.0.0.1:4173
 ~~~
 
-Open **.breakmyapp/index.html** in your browser. The JSON report lives in **.breakmyapp/report.json**.
+The demo deliberately causes layout overflow, a JavaScript exception, and missing image and CSS resources. Open **.breakmyapp/index.html** in your browser. The JSON report lives in **.breakmyapp/report.json**.
 
 To scan a local development server with a custom viewport:
 
