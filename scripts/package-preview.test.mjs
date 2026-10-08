@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, readdir, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -72,4 +72,24 @@ test('does not delete an existing preview when a build is missing',async()=>{
     await assert.rejects(assemblePackage({root}));
     assert.ok((await readFile(first.runtimeEntry,'utf8')).includes('core/index.js'));
   } finally {await rm(root,{recursive:true,force:true});}
+});
+
+test('never overwrites source files when given an unsafe output directory', async()=>{
+ const root=await fixture();
+ try {
+  const source=join(root,'packages/core/dist/index.js');
+  const before=await readFile(source,'utf8');
+  await assert.rejects(assemblePackage({root,output:join(root,'packages/core/dist')}),/inside .breakmyapp/);
+  assert.equal(await readFile(source,'utf8'),before);
+ } finally {await rm(root,{recursive:true,force:true});}
+});
+
+test('refuses symlinked preview directories before deleting anything', {skip:process.platform==='win32'}, async()=>{
+ const root=await fixture();
+ const outside=await mkdtemp(join(tmpdir(),'bma-not-the-repo-'));
+ try {
+  await symlink(outside,join(root,'.breakmyapp'));
+  await assert.rejects(assemblePackage({root}),/symlinks/);
+  assert.deepEqual(await readdir(outside),[]);
+ } finally {await rm(root,{recursive:true,force:true});await rm(outside,{recursive:true,force:true});}
 });

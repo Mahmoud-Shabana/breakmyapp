@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, rm, writeFile, chmod } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, writeFile, chmod, lstat } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,8 +28,20 @@ async function copyRuntime(sourceDir, targetDir) {
 export async function assemblePackage({ root = repositoryRoot, output = join(root, '.breakmyapp', 'package-preview') } = {}) {
   root = resolve(root);
   output = resolve(output);
-  if (output === root || !output.startsWith(root + sep)) {
-    throw Error('Output directory must be a descendant of the repository root.');
+  const previewBase = resolve(root, '.breakmyapp');
+  if (!output.startsWith(previewBase + sep)) {
+    throw Error('Output directory must be inside .breakmyapp/ to protect project files.');
+  }
+  // Refuse symlinked path segments so the folder cannot redirect outside the project.
+  let segmentPath = root;
+  for (const segment of relative(root, output).split(sep)) {
+    segmentPath = join(segmentPath, segment);
+    try {
+      const info = await lstat(segmentPath);
+      if (info.isSymbolicLink()) throw Error('Package preview output must not include symlinks.');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
   }
   const rootManifest = await json(join(root, 'package.json'));
   const coreManifest = await json(join(root, 'packages/core/package.json'));
