@@ -51,3 +51,7 @@ The optional --plugin flag imports local trusted .mjs JavaScript modules exposin
 ## Reproduction Packs
 
 `packages/core/src/repro.ts` maps selected structured findings to Node.js test-runner scripts using Playwright, capped at 100 files per scan. Opt-in `BrowserContext.tracing` saves operations, DOM snapshots and screenshots in ZIP archives for viewports with findings. Browser traces do not store test assertions. See [reproduction.md](reproduction.md).
+
+## Visual regression
+
+When enabled, `checkVisualScreenshot()` compares a viewport screenshot with a saved baseline keyed by sanitized URL and viewport. `comparePngBuffers()` counts changed pixels using a fixed per-channel tolerance, with a separate maximum mismatch ratio. Each comparison is recorded in `ScanResult.visualComparisons`; differences yield `visual.pixel-change` findings marked needs-review. The offline HTML report renders protected relative URLs under `visual/{baseline,current,diff}/`. See [visual-regression.md](visual-regression.md) for capture reproducibility limits.

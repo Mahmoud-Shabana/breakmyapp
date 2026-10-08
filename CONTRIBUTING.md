@@ -56,3 +56,7 @@ See [docs/plugins.md](docs/plugins.md) and [the meta-description example](exampl
 ## Reproduction Packs
 
 New repro rules need deterministic assertions and unit tests in `packages/core/src/test/repro.test.ts`. Avoid embedding untrusted strings as executable JavaScript. Generated scripts must be reviewed before running, and traces must not be committed without inspecting private data. See [docs/reproduction.md](docs/reproduction.md).
+
+## Visual comparison development
+
+The pixel comparison implementation is in `packages/core/src/visual.ts`. It uses Sharp to decode viewport PNGs and highlights pixels with a channel difference over the configured color tolerance. Add deterministic fixtures and unit tests for new comparison behavior; see `visual.test.ts`, `docs/visual-regression.md`, and the optional Chromium integration test. Avoid describing intentional design changes as confirmed bugs. Do not commit screenshots containing private information.

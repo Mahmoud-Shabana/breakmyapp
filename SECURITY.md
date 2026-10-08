@@ -29,3 +29,7 @@ Custom --plugin modules execute with full Node.js and Playwright permissions, **
 ## Reproduction Packs
 
 The `--trace` and `--evidence` options record Playwright traces that can contain page data, network information and private content **without redaction**. Artifacts are local and ignored by Git, but do not publicly share them without manual inspection. The `--repro` and `--evidence` options generate executable tests that revisit the original page, executing its JavaScript and requests. Only run on sites you own or have permission to test. Generated test URLs drop queries and credentials for privacy; some authenticated cases may not reproduce.
+
+## Visual snapshots and baseline artifacts
+
+`--visual-save` and `--visual-compare` capture screenshots of the rendered page, which can include personal data, internal UI state or confidential content. The comparison report includes copies of the baseline and current screenshots, plus a highlighted diff. Use a staging site with synthetic data where possible. Baseline output directories are explicitly chosen by the user; keep private screenshots inside `.breakmyapp/` or another ignored location rather than committing them blindly. A redacted URL key does **not** redact image pixels. Comparing images may execute page JavaScript, so target only sites you are authorized to test.

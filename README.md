@@ -18,6 +18,7 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - ♿ **Opt-in accessibility auditing** using axe-core and per-element WCAG guidance.
 - 🧩 **Local community rule plugins** to add custom checks without modifying the core.
 - 🔎 **Opt-in same-origin crawling**, up to 25 pages, with conservative URL filtering and per-page evidence.
+- 🖼️ **Visual Regression Testing** — approved baseline PNGs, changed-pixel percentages, and highlighted before/after/diff images.
 - 🎬 **Opt-in Reproduction Packs** — runnable Playwright-powered Node.js tests plus browser Trace ZIPs.
 - 📸 **Visual evidence**, captured for viewport(s) where findings occur.
 - 📄 **Offline HTML and machine-readable JSON reports**, stored on your own machine.
@@ -25,6 +26,29 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - 🔒 **Local-first:** no account, AI API key, or hosted backend is required.
 
 This release crawls only a bounded set of linked pages when explicitly requested; it does **not** replay arbitrary user journeys, verify button behavior or diagnose visual regressions. A clean report does not mean a bug-free application.
+
+## 🖼️ Visual regression — compare what your users see
+
+BreakMyApp can capture viewport screenshots as visual baselines and then identify meaningful pixel changes after a UI update. This feature runs locally and is disabled unless you enable it.
+
+Try a deterministic demo with two browser-visible variants of the **same URL path**:
+
+~~~bash
+# Terminal 1
+npm run demo:visual
+~~~
+
+~~~bash
+# Terminal 2: save the reference screenshot
+npm run scan -- "http://127.0.0.1:4175/?variant=before" --viewport 375x812 --visual-save .breakmyapp/baselines
+
+# Compare a deliberately changed version of the same page:
+npm run scan -- "http://127.0.0.1:4175/?variant=after" --viewport 375x812 --visual-compare .breakmyapp/baselines --visual-threshold 1
+~~~
+
+Open `.breakmyapp/index.html` to see the **baseline, current screenshot, and highlighted diff**. The JSON report includes a `visualComparisons` summary for every tested page and viewport. The default mismatch limit is **1% of pixels**; `--visual-threshold` accepts 0–100 as a percentage. A color tolerance reduces single-channel noise, but font rendering and dynamic content can still cause false positives.
+
+Use the same commands with `--crawl` to compare multiple authorized pages. Baseline filenames are keyed by sanitized page URL and viewport; query strings are omitted from the filename but preserved for single-page navigation. Baselines and diff screenshots can contain private content—review before publishing. See [Visual Regression Guide](docs/visual-regression.md).
 
 ## 🧭 Studio — visualize and compare scans
 
@@ -132,6 +156,7 @@ Use **npm test** for TypeScript build and unit tests. After installing Chromium,
 - **packages/core** — Playwright runner, bounded link queue, axe-core adapter, local rule SDK, evidence capture and reports.
 - **packages/cli** — argument parsing, summary output and exit codes.
 - **examples/broken-site** — a reproducible, intentionally broken demonstration page.
+- **examples/visual-regression** — two predictable visual variants for baseline/diff testing.
 
 Learn more in [docs/architecture.md](docs/architecture.md) and [docs/crawling.md](docs/crawling.md).
 
@@ -142,6 +167,7 @@ Learn more in [docs/architecture.md](docs/architecture.md) and [docs/crawling.md
 - [x] Bounded same-origin page discovery with per-page evidence and Studio comparison.
 - [x] Integrate opt-in axe-core WCAG A/AA checks (developer preview).
 - [ ] Add baselines for image-diff visual regression.
+- [x] Visual baselines, pixel comparisons, and offline diff gallery (developer preview).
 - [x] Generate opt-in reproduction scripts for supported findings and trace ZIPs.
 - [x] Implement the initial opt-in local rule SDK with an example plugin.
 - [ ] Stabilize the SDK with isolation and a vetted community rules catalog.
