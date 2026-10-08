@@ -18,6 +18,7 @@ const USAGE = [
   '  -o, --output <dir>       Report directory (default: .breakmyapp)',
   '  --viewport <W>x<H>      Test a viewport (repeatable; defaults: 375x812, 768x1024, 1440x900)',
   '  --timeout-ms <number>   Navigation timeout (default: 20000)',
+  '  --a11y                  Audit WCAG A/AA with axe-core (opt-in)',
   '  --crawl                 Discover and scan up to 5 same-origin pages',
   '  --max-pages <number>    Bounded crawl, 1–25 pages (implies --crawl)',
   '  --fail-on <severity>    Non-zero exit if finding is high, medium, or any',
@@ -38,6 +39,7 @@ interface Parsed {
   viewports?: Viewport[];
   timeoutMs: number;
   maxPages: number;
+  accessibility: boolean;
   failOn?: Threshold;
 }
 
@@ -58,6 +60,7 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   let viewports: Viewport[] | undefined;
   let timeoutMs = 20000;
   let maxPages = 1;
+  let accessibility = false;
   let explicitMaxPages = false;
   let failOn: Threshold | undefined;
 
@@ -70,6 +73,8 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
       const match = /^(\d+)x(\d+)$/i.exec(value);
       if (!match) throw new Error('Expected --viewport WIDTHxHEIGHT, e.g. 375x812.');
       (viewports ??= []).push({ width: Number(match[1]), height: Number(match[2]) });
+    } else if (part === '--a11y') {
+      accessibility = true;
     } else if (part === '--crawl') {
       if (!explicitMaxPages) maxPages = 5;
     } else if (part === '--max-pages') {
@@ -95,7 +100,7 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 25) {
     throw new Error('--max-pages must be an integer between 1 and 25.');
   }
-  return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages, failOn };
+  return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages, accessibility, failOn };
 }
 
 function shouldFail(severities: Severity[], threshold?: Threshold): boolean {

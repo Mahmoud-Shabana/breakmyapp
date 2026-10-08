@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+import { normalizeAxeViolations } from './accessibility.js';
 import { PageQueue } from './crawl.js';
 import {
   dedupeResourceProblems,
@@ -253,6 +255,28 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
             viewport,
             evidence: { detail: 'Captured via the browser pageerror event.' }
           }));
+        }
+
+        if (options.accessibility) {
+          try {
+            const audit = await new AxeBuilder({ page })
+              .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+              .analyze();
+            for (const a11yFinding of normalizeAxeViolations(audit.violations, viewport)) {
+              findings.push(newFinding(a11yFinding));
+            }
+          } catch {
+            findings.push(newFinding({
+              ruleId: 'scanner.accessibility-audit-failed',
+              category: 'accessibility',
+              severity: 'low',
+              confidence: 'needs-review',
+              title: 'Accessibility audit could not finish',
+              description: 'The automated axe-core audit did not complete for this page.',
+              viewport,
+              evidence: { detail: 'Retry on a stable page or disable --a11y. No compliance conclusion can be drawn.' }
+            }));
+          }
         }
 
         for (const problem of dedupeResourceProblems(resourceProblems)) {

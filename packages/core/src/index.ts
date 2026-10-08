@@ -14,3 +14,6 @@ export { problemFromHttpResponse, problemFromNetworkFailure, redactedResourceUrl
 export type { ResourceProblem, StaticResourceType } from './resources.js';
 
 export { PageQueue, eligiblePageUrl } from './crawl.js';
+
+export { axeSeverity, axeSelector, normalizeAxeViolations } from './accessibility.js';
+export type { AxeNode, AxeViolation } from './accessibility.js';

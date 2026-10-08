@@ -1,6 +1,6 @@
 export type Severity = 'high' | 'medium' | 'low';
 export type Confidence = 'confirmed' | 'needs-review';
-export type Category = 'layout' | 'runtime' | 'resources' | 'navigation';
+export type Category = 'layout' | 'runtime' | 'resources' | 'navigation' | 'accessibility' | 'plugin';
 
 export interface Viewport {
   width: number;
@@ -21,6 +21,8 @@ export interface Finding {
   evidence?: {
     screenshot?: string;
     detail?: string;
+    impact?: string;
+    helpUrl?: string;
     candidates?: Array<{ selector: string; overflowPx: number }>;
   };
 }
@@ -43,6 +45,7 @@ export interface ScanOptions {
   viewports?: Viewport[];
   timeoutMs?: number;
   maxPages?: number;
+  accessibility?: boolean;
 }
 
 export const DEFAULT_VIEWPORTS: Viewport[] = [

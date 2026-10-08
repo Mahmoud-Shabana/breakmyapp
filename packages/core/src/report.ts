@@ -27,6 +27,11 @@ function renderFinding(finding: Finding): string {
       '"><img loading="lazy" src="' + escapeHtml(screenshotPath) +
       '" alt="Screenshot for ' + escapeHtml(finding.title) + '"></a>'
     : '';
+  const helpUrl = finding.evidence?.helpUrl;
+  const helpLink = helpUrl && /^https:\/\/(?:[a-z0-9-]+\.)*dequeuniversity\.com\//i.test(helpUrl)
+    ? '<p><a target="_blank" rel="noopener noreferrer" href="' +
+      escapeHtml(helpUrl) + '">Read axe rule guidance ↗</a></p>'
+    : '';
   const candidates = finding.evidence?.candidates?.length
     ? '<details><summary>Possible overflow elements (' + finding.evidence.candidates.length +
       ')</summary><ol>' + finding.evidence.candidates.map(candidate =>
@@ -48,7 +53,7 @@ function renderFinding(finding: Finding): string {
       escapeHtml(finding.selector) + '</code></p>' : '') +
     (finding.evidence?.detail ? '<p class="muted">' +
       escapeHtml(finding.evidence.detail) + '</p>' : '') +
-    candidates + image + '</article>';
+    helpLink + candidates + image + '</article>';
 }
 
 export function renderHtmlReport(result: ScanResult): string {
@@ -75,7 +80,7 @@ export function renderHtmlReport(result: ScanResult): string {
     '.issue{background:#101b2d;border:1px solid #26364c;border-radius:18px;padding:24px;margin:15px 0;overflow-wrap:anywhere}',
     '.issue-head{display:flex;align-items:center;gap:13px}.pill{padding:4px 10px;border-radius:30px;font-size:11px;font-weight:800;letter-spacing:.06em}',
     '.high{color:#ffc0c0;background:#5a2832}.medium{color:#ffe3a1;background:#5c4725}.low{color:#b4e7fc;background:#24495a}',
-    'code{color:#b7dfd8}.selector{font-size:14px}',
+    'code{color:#b7dfd8}.selector{font-size:14px}a{color:#91eaca}',
     'img{display:block;max-width:100%;width:650px;border-radius:12px;border:1px solid #334862;margin-top:20px}',
     'details{color:#b8c7dc;font-size:14px;margin-top:12px}summary{cursor:pointer;font-weight:600}',
     'details li{margin:6px 0;overflow-wrap:anywhere}',
