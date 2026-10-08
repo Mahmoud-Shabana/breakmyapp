@@ -2,7 +2,7 @@
 
 **Your website looks perfect. Let's prove it wrong.**
 
-BreakMyApp is an open-source, local-first website bug scanner. It uses a real Chromium browser to collect **evidence**, not guesses: responsive overflow, uncaught JavaScript errors, and screenshots you can inspect offline.
+BreakMyApp is an open-source, local-first website bug scanner. It uses a real Chromium browser to collect **evidence**, not guesses: responsive overflow, uncaught JavaScript errors, failed static resources, and screenshots you can inspect offline.
 
 > **Status: early developer preview (v0.1.0).** Not published to npm yet. The project is actively being built; the first release is intentionally limited in scope.
 
@@ -10,6 +10,7 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 
 - 📱 **Responsive overflow detection** at 375×812, 768×1024 and 1440×900, or custom viewport sizes.
 - 🐛 **Browser runtime error tracking** for uncaught JavaScript errors.
+- 🖼️ **Failed resource detection** for images, scripts and stylesheets returning HTTP 4xx/5xx or experiencing network failures (labelled needs-review).
 - 📸 **Visual evidence**, captured for viewport(s) where findings occur.
 - 📄 **Offline HTML and machine-readable JSON reports**, stored on your own machine.
 - 🛠 **CI-friendly exit codes** with an opt-in --fail-on severity threshold.
@@ -76,7 +77,7 @@ Learn more in [docs/architecture.md](docs/architecture.md).
 ## Roadmap
 
 - [x] First real-browser scanner with evidence and offline reports.
-- [ ] Detect and explain failing static resources.
+- [x] Detect failed static resources with conservative classification and privacy-safe URLs.
 - [ ] Integrate axe-core accessibility rules.
 - [ ] Add baselines for image-diff visual regression.
 - [ ] Rule plugin SDK and shareable community packs.

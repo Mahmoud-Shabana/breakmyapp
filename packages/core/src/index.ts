@@ -10,3 +10,5 @@ export type {
   Severity,
   Category
 } from './types.js';
+export { problemFromHttpResponse, problemFromNetworkFailure, redactedResourceUrl, dedupeResourceProblems } from './resources.js';
+export type { ResourceProblem, StaticResourceType } from './resources.js';

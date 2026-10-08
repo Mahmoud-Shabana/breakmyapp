@@ -8,6 +8,7 @@ CLI (@breakmyapp/cli)
       -> Playwright Chromium
           -> responsive overflow probe (DOM measurements)
           -> pageerror listener (runtime failures)
+          -> response/requestfailed listeners (static asset failures)
           -> per-viewport screenshot evidence
       -> typed ScanResult v1
   -> HTML and JSON reporter
@@ -22,6 +23,8 @@ Each finding carries a ruleId, severity, confidence, viewport, stable-ish finger
 ## Rule behavior
 
 **layout.horizontal-overflow** measures document scrollWidth versus viewport width, and identifies up to five candidate elements whose bounding boxes extend outside the viewport. The first candidate is included in evidence. This can be a valid intentional design (such as a carousel); users must inspect the screenshot.
+
+**resources.http-error** and **resources.network-error** observe image, script and stylesheet requests. The report strips query parameters and credentials from asset URLs, deduplicates repeats and excludes canceled requests. Findings are labelled needs-review because some failed resources may be optional or intentionally missing.
 
 **runtime.uncaught-error** listens to Playwright pageerror and records at most ten distinct errors per viewport in the first 300ms after DOMContentLoaded. It does not diagnose failures that occur later or only after interaction.
 

@@ -19,8 +19,13 @@ test('detects real overflow and page errors in Chromium', {
 }, async () => {
   const html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>body{margin:0}.box{width:1000px;height:200px;background:tomato}</style></head>' +
-    '<body><div class="box"></div><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
-  const server = createServer((_req, res) => {
+    '<body><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
+  const server = createServer((req, res) => {
+    if (req.url === '/missing.png') {
+      res.writeHead(404, { 'content-type': 'text/plain' });
+      res.end('Missing intentionally');
+      return;
+    }
     res.writeHead(200, { 'content-type': 'text/html' });
     res.end(html);
   });
@@ -36,6 +41,8 @@ test('detects real overflow and page errors in Chromium', {
     });
     assert.ok(report.findings.some(f => f.ruleId === 'layout.horizontal-overflow'));
     assert.ok(report.findings.some(f => f.ruleId === 'runtime.uncaught-error'));
+    assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&
+      f.description.includes('/missing.png')));
     await writeReports(report, dir);
     const raw = await readFile(join(dir, 'report.json'), 'utf8');
     assert.equal(JSON.parse(raw).schemaVersion, 1);
