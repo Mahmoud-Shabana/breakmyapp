@@ -18,7 +18,8 @@
     "studio": "node scripts/studio-server.mjs",
     "test:studio": "node --test apps/studio/analysis.test.mjs scripts/studio-server.test.mjs",
     "test:plugins": "node --test examples/plugins/meta-description.test.mjs",
-    "test:repros": "node scripts/run-repros.mjs"
+    "test:repros": "node scripts/run-repros.mjs",
+    "demo:visual": "node examples/visual-regression/server.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
