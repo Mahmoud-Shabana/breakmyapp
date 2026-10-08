@@ -56,7 +56,7 @@ To make a scan fail with exit code 2 when it finds medium or high severity issue
 npm run scan -- http://localhost:3000 --fail-on medium
 ~~~
 
-Use **npm test** for TypeScript build and unit tests. After installing Chromium, use **BREAKMYAPP_BROWSER_TESTS=1 npm test** (macOS/Linux) to include the real-browser integration test. On Windows PowerShell use **$env:BREAKMYAPP_BROWSER_TESTS="1"; npm test**.
+Use **npm test** for TypeScript build and unit tests. After installing Chromium, run **npm run test:browser** to execute the real-browser integration test on Windows, macOS or Linux. No GitHub Actions setup is required.
 
 ## What you'll get
 

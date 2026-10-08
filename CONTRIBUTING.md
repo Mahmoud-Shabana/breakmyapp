@@ -19,7 +19,7 @@ npm run build
 npm test
 ~~~
 
-The project does not depend on GitHub Actions: run build and tests locally, and paste your test output in the PR description. The default test suite does not launch a browser; set BREAKMYAPP_BROWSER_TESTS=1 to opt into the Chromium integration test.
+The project does not depend on GitHub Actions: run build and tests locally, and paste your test output in the PR description. The default test suite does not launch a browser; run `npm run test:browser` to execute the Chromium integration test without platform-specific environment variables.
 
 ## Pull requests
 
