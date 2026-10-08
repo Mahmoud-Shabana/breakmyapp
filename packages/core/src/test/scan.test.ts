@@ -123,3 +123,47 @@ test('single-page scans preserve required query params but redact them from the 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+
+test('real browser visual baseline detects a deliberate theme regression', {
+  skip: process.env.BREAKMYAPP_BROWSER_TESTS !== '1'
+}, async () => {
+  const server = createServer((req, res) => {
+    const changed = (req.url ?? '').includes('variant=after');
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<style>body{margin:0;background:' + (changed ? '#ff2244' : '#112233') +
+      ';color:white;font:16px system-ui}main{height:400px}</style></head>' +
+      '<body><main><h1>Stable content</h1></main></body></html>');
+  });
+  const dir = await mkdtemp(join(tmpdir(), 'bma-visual-browser-'));
+  try {
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    const addr = server.address();
+    assert.ok(addr && typeof addr !== 'string');
+    const url = 'http://127.0.0.1:' + addr.port + '/';
+    const baselineDir = join(dir, 'baselines');
+    const opts = {
+      outputDir: join(dir, 'report'), viewports: [{width:375,height:812}],
+      visualBaselineDir: baselineDir
+    };
+    const baseline = await scanSite({...opts, url: url + '?variant=before', visualMode:'save'});
+    assert.equal(baseline.visualComparisons?.[0].status, 'saved');
+    const changed = await scanSite({...opts, url: url + '?variant=after', visualMode:'compare'});
+    assert.equal(changed.visualComparisons?.[0].status, 'changed');
+    assert.ok((changed.visualComparisons?.[0].mismatchRatio ?? 0) > .01);
+    assert.ok(changed.findings.some(f => f.ruleId === 'visual.pixel-change'));
+    const diffPath = changed.visualComparisons?.[0].diff;
+    assert.ok(diffPath);
+    const png = await readFile(join(dir, 'report', diffPath));
+    assert.equal(png.subarray(0, 4).toString('hex'), '89504e47');
+    await writeReports(changed, opts.outputDir);
+    const html = await readFile(join(opts.outputDir, 'index.html'), 'utf8');
+    assert.match(html, /Visual regression/);
+    assert.match(html, /Diff \(highlighted pixels\)/);
+  } finally {
+    await new Promise<void>((resolve, reject) =>
+      server.close(error => error ? reject(error) : resolve()));
+    await rm(dir, { recursive:true, force:true });
+  }
+});

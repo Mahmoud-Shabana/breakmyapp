@@ -85,3 +85,37 @@ test('multi-page reports list visited URLs and support page-specific screenshot 
   assert.ok(html.includes('screenshots/deadbeefcafe-375x812.png'));
   assert.ok(!html.includes('https://example.test/<unsafe>'));
 });
+
+
+test('visual report escapes imported page URLs and rejects arbitrary image paths', () => {
+  const html = renderHtmlReport({
+    ...example,
+    visualComparisons: [
+      {
+        pageUrl: 'https://example.test/<img src=x onerror=alert(1)>',
+        viewport: {width:375,height:812}, status:'changed',
+        mismatchRatio:.25, mismatchPixels:25, totalPixels:100, threshold:.01,
+        baseline:'visual/baseline/deadbeefcafe-375x812.png',
+        current:'visual/current/deadbeefcafe-375x812.png',
+        diff:'javascript:alert(1)'
+      }
+    ]
+  });
+  assert.match(html, /Visual regression \(1 snapshots\)/);
+  assert.match(html, /25\.00% pixels changed/);
+  assert.ok(html.includes('visual/baseline/deadbeefcafe-375x812.png'));
+  assert.ok(!html.includes('javascript:alert(1)'));
+  assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
+});
+
+test('visual report links to a generated diff only when its path is safe', () => {
+  const html = renderHtmlReport({
+    ...example,
+    visualComparisons: [{
+      pageUrl:'http://localhost/',viewport:{width:375,height:812},status:'changed',
+      mismatchRatio:.10, diff:'visual/diff/deadbeefcafe-375x812.png'
+    }]
+  });
+  assert.match(html, /visual\/diff\/deadbeefcafe-375x812\.png/);
+  assert.match(html, /Diff \(highlighted pixels\)/);
+});
