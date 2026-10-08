@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import {
   scanSite,
   writeReports,
+  writeReproductionPacks,
   validateRulePlugin,
   type RulePlugin,
   type Severity,
@@ -23,6 +24,9 @@ const USAGE = [
   '  --timeout-ms <number>   Navigation timeout (default: 20000)',
   '  --a11y                  Audit WCAG A/AA with axe-core (opt-in)',
   '  --plugin <file.mjs>     Execute a trusted local rule (repeatable)',
+  '  --repro                  Generate Playwright-based Node test reproductions',
+  '  --trace                  Capture sensitive, opt-in Playwright trace ZIP files',
+  '  --evidence               Enable --repro and --trace together',
   '  --crawl                 Discover and scan up to 5 same-origin pages',
   '  --max-pages <number>    Bounded crawl, 1–25 pages (implies --crawl)',
   '  --fail-on <severity>    Non-zero exit if finding is high, medium, or any',
@@ -45,6 +49,8 @@ interface Parsed {
   maxPages: number;
   accessibility: boolean;
   pluginPaths: string[];
+  repro: boolean;
+  trace: boolean;
   failOn?: Threshold;
 }
 
@@ -67,6 +73,8 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   let maxPages = 1;
   let accessibility = false;
   const pluginPaths: string[] = [];
+  let repro = false;
+  let trace = false;
   let explicitMaxPages = false;
   let failOn: Threshold | undefined;
 
@@ -81,6 +89,13 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
       (viewports ??= []).push({ width: Number(match[1]), height: Number(match[2]) });
     } else if (part === '--a11y') {
       accessibility = true;
+    } else if (part === '--repro') {
+      repro = true;
+    } else if (part === '--trace') {
+      trace = true;
+    } else if (part === '--evidence') {
+      repro = true;
+      trace = true;
     } else if (part === '--plugin') {
       pluginPaths.push(requiredValue(args, i++, part));
     } else if (part === '--crawl') {
@@ -110,7 +125,7 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   }
   if (pluginPaths.length > 10) throw new Error('Only up to 10 plugins are supported per scan.');
   return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages,
-    accessibility, pluginPaths, failOn };
+    accessibility, pluginPaths, repro, trace, failOn };
 }
 
 function shouldFail(severities: Severity[], threshold?: Threshold): boolean {
@@ -140,6 +155,10 @@ async function main(): Promise<void> {
   console.log('\nBreakMyApp v0.1.0 — scanning ' + parsed.url);
   console.log('Browser: Chromium | Local report: ' + parsed.outputDir + '\n');
   const result = await scanSite({ ...parsed, plugins });
+  if (parsed.repro) {
+    const generated = await writeReproductionPacks(result, parsed.outputDir);
+    console.log('Generated reproduction tests: ' + generated);
+  }
   await writeReports(result, parsed.outputDir);
   const high = result.findings.filter(f => f.severity === 'high').length;
   const medium = result.findings.filter(f => f.severity === 'medium').length;

@@ -126,6 +126,7 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
   viewports.forEach(assertViewport);
   const startedAt = new Date().toISOString();
   await mkdir(join(options.outputDir, 'screenshots'), { recursive: true });
+  if (options.trace) await mkdir(join(options.outputDir, 'traces'), { recursive: true });
 
   const findings: Finding[] = [];
   const pagesScanned: string[] = [];
@@ -138,7 +139,12 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
       pagesScanned.push(current);
       for (const viewport of viewports) {
       const context = await browser.newContext({ viewport });
+      let tracingActive = false;
       try {
+        if (options.trace) {
+          await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+          tracingActive = true;
+        }
         const page = await context.newPage();
         // Do not follow a page redirect that leaves the explicitly chosen origin.
         await page.route('**/*', route => {
@@ -311,6 +317,15 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           finding.pageUrl = current;
           finding.id = fingerprint([current, finding.id]);
         }
+        if (findings.length > firstIndex && tracingActive) {
+          const pageKey = createHash('sha256').update(current).digest('hex').slice(0, 12);
+          const tracePath = 'traces/' + pageKey + '-' + viewport.width + 'x' + viewport.height + '.zip';
+          await context.tracing.stop({ path: join(options.outputDir, tracePath) });
+          tracingActive = false;
+          for (const finding of findings.slice(firstIndex)) {
+            finding.evidence = { ...finding.evidence, trace: tracePath };
+          }
+        }
         if (findings.length > firstIndex) {
           const pageKey = createHash('sha256').update(current).digest('hex').slice(0, 12);
           const name = pageKey + '-' + viewport.width + 'x' + viewport.height + '.png';
@@ -324,6 +339,7 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           }
         }
       } finally {
+        if (tracingActive) await context.tracing.stop();
         await context.close();
       }
       }

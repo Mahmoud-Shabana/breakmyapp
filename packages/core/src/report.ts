@@ -32,6 +32,14 @@ function renderFinding(finding: Finding): string {
     ? '<p><a target="_blank" rel="noopener noreferrer" href="' +
       escapeHtml(helpUrl) + '">Read axe rule guidance ↗</a></p>'
     : '';
+  const repro = finding.evidence?.repro;
+  const reproLink = repro && /^repros\/[a-f0-9]{16}\.test\.mjs$/.test(repro)
+    ? '<a href="' + escapeHtml(repro) + '" download>Download reproducer ↗</a>' : '';
+  const trace = finding.evidence?.trace;
+  const traceLink = trace && /^traces\/[a-f0-9]{12}-[0-9]{3,4}x[0-9]{3,4}\.zip$/.test(trace)
+    ? '<a href="' + escapeHtml(trace) + '" download>Download Playwright trace ↗</a>' : '';
+  const evidenceLinks = reproLink || traceLink
+    ? '<p class="evidence-links">' + [reproLink, traceLink].filter(Boolean).join(' · ') + '</p>' : '';
   const candidates = finding.evidence?.candidates?.length
     ? '<details><summary>Possible overflow elements (' + finding.evidence.candidates.length +
       ')</summary><ol>' + finding.evidence.candidates.map(candidate =>
@@ -53,7 +61,7 @@ function renderFinding(finding: Finding): string {
       escapeHtml(finding.selector) + '</code></p>' : '') +
     (finding.evidence?.detail ? '<p class="muted">' +
       escapeHtml(finding.evidence.detail) + '</p>' : '') +
-    helpLink + candidates + image + '</article>';
+    evidenceLinks + helpLink + candidates + image + '</article>';
 }
 
 export function renderHtmlReport(result: ScanResult): string {

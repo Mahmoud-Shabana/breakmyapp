@@ -25,6 +25,8 @@ export interface Finding {
     detail?: string;
     impact?: string;
     helpUrl?: string;
+    trace?: string;
+    repro?: string;
     candidates?: Array<{ selector: string; overflowPx: number }>;
   };
 }
@@ -48,6 +50,7 @@ export interface ScanOptions {
   timeoutMs?: number;
   maxPages?: number;
   accessibility?: boolean;
+  trace?: boolean;
   plugins?: readonly RulePlugin[];
 }
 
