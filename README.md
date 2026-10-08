@@ -8,7 +8,7 @@
 
 BreakMyApp is an open-source, local-first website bug scanner. It uses a real Chromium browser to collect **evidence**, not guesses: responsive overflow, uncaught JavaScript errors, failed static resources, and screenshots you can inspect offline.
 
-> **Status: developer preview (scanner v0.1.0, Studio v0.2 preview).** Not published to npm yet. The project is actively being built; the first release is intentionally limited in scope.
+> **Status: developer preview (scanner v0.1.0, Studio v0.2 preview).** Not published to npm yet. Test with a Git clone until the full release verification gate passes.
 
 ## What's working
 
@@ -25,7 +25,7 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - 🛠 **CI-friendly exit codes** with an opt-in --fail-on severity threshold.
 - 🔒 **Local-first:** no account, AI API key, or hosted backend is required.
 
-This release crawls only a bounded set of linked pages when explicitly requested; it does **not** replay arbitrary user journeys, verify button behavior or diagnose visual regressions. A clean report does not mean a bug-free application.
+This release crawls only a bounded set of linked pages when explicitly requested. It supports **pixel-based** visual regression checks, but does **not** replay arbitrary user journeys, verify button behavior, or determine whether design changes are intentional. A clean report does not mean a bug-free application. A clean report does not mean a bug-free application.
 
 ## 🖼️ Visual regression — compare what your users see
 
@@ -78,7 +78,7 @@ npm run test:studio
 
 ## Quick start
 
-Requirements: Node.js 20+, npm and a system capable of launching Chromium.
+Requirements: **Node.js 22.12.0 or newer**, npm and a system capable of launching Chromium. This minimum matches the Node.js requirement of the current `@axe-core/playwright` dependency.
 
 ~~~bash
 git clone https://github.com/Mahmoud-Shabana/breakmyapp.git
@@ -86,6 +86,7 @@ cd breakmyapp
 npm install
 npx playwright install chromium
 npm run build
+npm run doctor
 ~~~
 
 Start our deliberately broken demo page in terminal one:
@@ -141,7 +142,7 @@ To make a scan fail with exit code 2 when it finds medium or high severity issue
 npm run scan -- http://localhost:3000 --fail-on medium
 ~~~
 
-Use **npm test** for TypeScript build and unit tests. After installing Chromium, run **npm run test:browser** to execute the real-browser integration test on Windows, macOS or Linux. No GitHub Actions setup is required.
+Use **`npm run test:offline`** to check Studio, community plugin and Doctor logic without installing dependencies. Use **`npm test`** for a complete TypeScript build plus local unit tests. Once Chromium is installed, run **`npm run test:browser`** for real-browser integration and **`npm run verify:release`** for the complete local release gate. If any check fails, the project is not ready for an npm release. See [Release Checklist](docs/release-checklist.md). GitHub Actions is not required.
 
 ## What you'll get
 

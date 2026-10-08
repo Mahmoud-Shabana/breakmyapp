@@ -60,3 +60,7 @@ New repro rules need deterministic assertions and unit tests in `packages/core/s
 ## Visual comparison development
 
 The pixel comparison implementation is in `packages/core/src/visual.ts`. It uses Sharp to decode viewport PNGs and highlights pixels with a channel difference over the configured color tolerance. Add deterministic fixtures and unit tests for new comparison behavior; see `visual.test.ts`, `docs/visual-regression.md`, and the optional Chromium integration test. Avoid describing intentional design changes as confirmed bugs. Do not commit screenshots containing private information.
+
+## Release quality gate
+
+Run `npm run test:offline` first to verify the dependency-free tools, then `npm install`, `npx playwright install chromium`, and `npm run verify:release`. Do not claim the CLI has been validated end-to-end based only on unit tests. Follow [docs/release-checklist.md](docs/release-checklist.md). Avoid submitting private screenshots or traces.

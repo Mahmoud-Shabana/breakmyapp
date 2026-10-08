@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "build": "npm run build --workspace @breakmyapp/core && npm run build --workspace @breakmyapp/cli",
-    "test": "npm run build && npm run test --workspace @breakmyapp/core && npm run test:plugins",
+    "test": "npm run build && npm run test --workspace @breakmyapp/core && npm run test:offline",
     "test:browser": "npm run build && node scripts/run-browser-tests.mjs",
     "scan": "npm run build && node packages/cli/dist/index.js",
     "demo": "node examples/broken-site/server.mjs",
@@ -19,7 +19,10 @@
     "test:studio": "node --test apps/studio/analysis.test.mjs scripts/studio-server.test.mjs",
     "test:plugins": "node --test examples/plugins/meta-description.test.mjs",
     "test:repros": "node scripts/run-repros.mjs",
-    "demo:visual": "node examples/visual-regression/server.mjs"
+    "demo:visual": "node examples/visual-regression/server.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "test:offline": "node --test scripts/doctor.test.mjs apps/studio/analysis.test.mjs scripts/studio-server.test.mjs examples/plugins/meta-description.test.mjs",
+    "verify:release": "npm run build && npm run doctor && npm test && npm run test:browser"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
