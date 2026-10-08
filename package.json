@@ -21,8 +21,10 @@
     "test:repros": "node scripts/run-repros.mjs",
     "demo:visual": "node examples/visual-regression/server.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "test:offline": "node --test scripts/doctor.test.mjs apps/studio/analysis.test.mjs scripts/studio-server.test.mjs examples/plugins/meta-description.test.mjs",
-    "verify:release": "npm run build && npm run doctor && npm test && npm run test:browser"
+    "test:offline": "node --test scripts/doctor.test.mjs apps/studio/analysis.test.mjs scripts/studio-server.test.mjs examples/plugins/meta-description.test.mjs scripts/package-preview.test.mjs",
+    "verify:release": "npm run build && npm run doctor && npm test && npm run test:browser && npm run package:preview && npm pack --dry-run .breakmyapp/package-preview",
+    "package:preview": "npm run build && node scripts/package-preview.mjs",
+    "test:package": "node --test scripts/package-preview.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

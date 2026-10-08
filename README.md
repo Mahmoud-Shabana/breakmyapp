@@ -76,6 +76,21 @@ npm run test:studio
 
 ---
 
+## Local-installable CLI package preview
+
+Before publishing anything to npm, you can **build a private local package** that includes the compiled CLI and core together, without requiring the unpublished `@breakmyapp/core` dependency:
+
+~~~bash
+npm install
+npm run package:preview
+npm pack --dry-run .breakmyapp/package-preview
+npm run test:package
+~~~
+
+The staged output is in `.breakmyapp/package-preview/`, which Git ignores. Its `package.json` is explicitly marked `private: true`: this is for local packaging tests, **not a published npm release**. Public runtime dependencies (`playwright`, `@axe-core/playwright`, and `sharp`) are still installed normally; a working Chromium browser is still required to scan.
+
+For a manual tarball smoke test, run `npm pack .breakmyapp/package-preview --pack-destination .breakmyapp` and install the generated `.tgz` in a clean test project once npm registry access is available. The package preview doesn't need the `@breakmyapp/core` workspace dependency at runtime. See the [release checklist](docs/release-checklist.md).
+
 ## Quick start
 
 Requirements: **Node.js 22.12.0 or newer**, npm and a system capable of launching Chromium. This minimum matches the Node.js requirement of the current `@axe-core/playwright` dependency.

@@ -45,7 +45,8 @@ test('npm pack --dry-run shows only intended files and no unit-test JS',async()=
   const root=await fixture();
   try {
     const {output}=await assemblePackage({root});
-    const packed=spawnSync('npm',['pack','--dry-run','--json',output],{encoding:'utf8'});
+    const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const packed=spawnSync(npmCommand,['pack','--dry-run','--json',output],{encoding:'utf8',shell:process.platform==='win32'});
     assert.equal(packed.status,0,packed.stderr);
     const included=JSON.parse(packed.stdout)[0].files.map(f=>f.path);
     assert.ok(included.includes('dist/index.js'));

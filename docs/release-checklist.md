@@ -16,6 +16,9 @@ npm run test:offline       # no package download needed; good first check
 npm run build
 npm run doctor
 npm run test:browser
+npm run package:preview
+npm run test:package
+npm pack --dry-run .breakmyapp/package-preview
 npm run verify:release
 ```
 
@@ -54,7 +57,8 @@ Inspect baseline/current/diff images and the recorded mismatch ratio.
 - [ ] Dependable dependency lockfile created and checked in from a clean `npm install`.
 - [ ] Review default trace/screenshot privacy, plugin trust boundary and generated scripts.
 - [ ] Confirm that the `@breakmyapp` npm organization/scope is owned and controlled by the maintainer. Both workspace packages are intentionally `private: true`; do **not** publish them prematurely. Establish a package publishing strategy before removing `private`.
-- [ ] Confirm `npm pack --dry-run` includes built artifacts and that packed CLI installation can resolve all published dependencies.
+- [x] Create a **private local packaging preview** from the compiled CLI and core; `npm pack --dry-run` is covered by a fixture test.
+- [ ] Run `npm run package:preview` after installing all dependencies, inspect **actual repository** tarball contents, and install the packed CLI in an unrelated clean directory with npm registry access.
 - [ ] Mark a release tag only after verifying reproducibility and documenting limitations.
 
 GitHub Actions status is not a substitute for running these gates. If CI is blocked, use the local commands and attach redacted logs to the release discussion.
