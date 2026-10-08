@@ -2,6 +2,10 @@
 
 **Your website looks perfect. Let's prove it wrong.**
 
+![BreakMyApp Studio illustrative dashboard preview](docs/assets/studio-preview.svg)
+
+*Illustrative Studio preview. Run `npm run studio` for the real interactive dashboard; sample data is not a live scan.*
+
 BreakMyApp is an open-source, local-first website bug scanner. It uses a real Chromium browser to collect **evidence**, not guesses: responsive overflow, uncaught JavaScript errors, failed static resources, and screenshots you can inspect offline.
 
 > **Status: developer preview (scanner v0.1.0, Studio v0.2 preview).** Not published to npm yet. The project is actively being built; the first release is intentionally limited in scope.
