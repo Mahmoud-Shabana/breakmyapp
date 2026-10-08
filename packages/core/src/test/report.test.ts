@@ -42,3 +42,15 @@ test('empty findings report is explicit about its limits', () => {
   const html = renderHtmlReport({ ...example, findings: [] });
   assert.match(html, /not a guarantee/i);
 });
+
+test('reporter ignores screenshot URLs outside the generated evidence directory', () => {
+  const modified: ScanResult = {
+    ...example,
+    findings: [{
+      ...example.findings[0],
+      evidence: { screenshot: 'javascript:alert(1)' }
+    }]
+  };
+  const html = renderHtmlReport(modified);
+  assert.ok(!html.includes('javascript:alert(1)'));
+});
