@@ -179,17 +179,21 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           if (pagesScanned.length === 1 && !findings.length && current === queue.planned[0]) {
             throw error;
           }
-          const detail = error instanceof Error ? error.message.slice(0, 250) : String(error).slice(0, 250);
-          findings.push(newFinding({
+          // Avoid persisting navigation exception strings that may include secrets in URLs.
+          const rawMessage = error instanceof Error ? error.message : String(error);
+          const code = rawMessage.match(/net::[A-Z0-9_]+/)?.[0] ?? 'navigation failed';
+          const finding = newFinding({
             ruleId: 'navigation.failed',
             category: 'navigation',
             severity: 'high',
             confidence: 'needs-review',
             title: 'Page navigation failed',
-            description: detail,
+            description: code,
             viewport,
             pageUrl: current
-          }));
+          });
+          finding.id = fingerprint([current, finding.id]);
+          findings.push(finding);
           continue;
         }
         if (viewport === viewports[0] && (options.maxPages ?? 1) > 1) {

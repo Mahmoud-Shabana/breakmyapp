@@ -37,7 +37,7 @@ function listItem(f,index){
  const head=el('div','','issue-header');head.append(el('strong',f.title),el('span','↗'));
  const meta=el('div','','meta');meta.append(el('span',f.severity.toUpperCase(),'tag '+f.severity),
  el('span',f.change.toUpperCase(),'tag '+f.change),el('span',f.viewport.width+' × '+f.viewport.height),
- f.pageUrl ? el('span',new URL(f.pageUrl).pathname) : el('span',''),
+ f.pageUrl ? el('span',String(f.pageUrl).replace(/^https?:\/\/[^/]+/, '').slice(0, 72)) : el('span',''),
  el('span',f.ruleId));
  card.append(head,el('p',f.description,'issue-desc'),meta);
  card.addEventListener('click',()=>{state.selected=index;renderList();showDetail(f);});

@@ -58,6 +58,7 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   let viewports: Viewport[] | undefined;
   let timeoutMs = 20000;
   let maxPages = 1;
+  let explicitMaxPages = false;
   let failOn: Threshold | undefined;
 
   for (let i = 0; i < args.length; i++) {
@@ -70,9 +71,10 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
       if (!match) throw new Error('Expected --viewport WIDTHxHEIGHT, e.g. 375x812.');
       (viewports ??= []).push({ width: Number(match[1]), height: Number(match[2]) });
     } else if (part === '--crawl') {
-      maxPages = Math.max(maxPages, 5);
+      if (!explicitMaxPages) maxPages = 5;
     } else if (part === '--max-pages') {
       maxPages = Number(requiredValue(args, i++, part));
+      explicitMaxPages = true;
     } else if (part === '--timeout-ms') {
       timeoutMs = Number(requiredValue(args, i++, part));
     } else if (part === '--fail-on') {

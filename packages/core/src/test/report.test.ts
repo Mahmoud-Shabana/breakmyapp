@@ -69,3 +69,19 @@ test('overflow candidates are rendered and escaped', () => {
   assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
   assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
 });
+
+test('multi-page reports list visited URLs and support page-specific screenshot paths', () => {
+  const html = renderHtmlReport({
+    ...example,
+    pagesScanned: ['https://example.test/', 'https://example.test/<unsafe>'],
+    findings: [{
+      ...example.findings[0],
+      pageUrl: 'https://example.test/<unsafe>',
+      evidence: { screenshot: 'screenshots/deadbeefcafe-375x812.png' }
+    }]
+  });
+  assert.match(html, /Scanned pages \(2\)/);
+  assert.ok(html.includes('https://example.test/&lt;unsafe&gt;'));
+  assert.ok(html.includes('screenshots/deadbeefcafe-375x812.png'));
+  assert.ok(!html.includes('https://example.test/<unsafe>'));
+});
