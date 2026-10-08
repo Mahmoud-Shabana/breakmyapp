@@ -112,12 +112,13 @@ Use **npm test** for TypeScript build and unit tests. After installing Chromium,
 - **packages/cli** — argument parsing, summary output and exit codes.
 - **examples/broken-site** — a reproducible, intentionally broken demonstration page.
 
-Learn more in [docs/architecture.md](docs/architecture.md).
+Learn more in [docs/architecture.md](docs/architecture.md) and [docs/crawling.md](docs/crawling.md).
 
 ## Roadmap
 
 - [x] First real-browser scanner with evidence and offline reports.
 - [x] Detect failed static resources with conservative classification and privacy-safe URLs.
+- [x] Bounded same-origin page discovery with per-page evidence and Studio comparison.
 - [ ] Integrate axe-core accessibility rules.
 - [ ] Add baselines for image-diff visual regression.
 - [ ] Rule plugin SDK and shareable community packs.

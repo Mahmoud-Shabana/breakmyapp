@@ -43,3 +43,8 @@ No harassment, spam, scraping of private data or testing websites without author
 ## Contributing to Studio
 
 Studio lives in `apps/studio/` and runs using `npm run studio`. It does not need Playwright or a build step. Run `npm run test:studio` for its dependency-free comparison and server checks. Keep imported strings as DOM text, preserve local-only processing, and clearly label synthetic data.
+
+
+## Multi-page scanner development
+
+Use `npm run demo` followed by `npm run scan -- http://127.0.0.1:4173 --crawl --viewport 375x812` to exercise page discovery and page-aware screenshots. Run `npm test` for the pure PageQueue tests and `npm run test:browser` for Chromium integration checks. The crawler is intentionally conservative; changes to URL eligibility require a clear security rationale, regression tests, and backwards-compatibility considerations for JSON reports.
