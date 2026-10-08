@@ -27,6 +27,9 @@ const USAGE = [
   '  --repro                  Generate Playwright-based Node test reproductions',
   '  --trace                  Capture sensitive, opt-in Playwright trace ZIP files',
   '  --evidence               Enable --repro and --trace together',
+  '  --visual-save <dir>      Save reference PNGs for each page/viewport',
+  '  --visual-compare <dir>   Compare the current render with saved reference PNGs',
+  '  --visual-threshold <pct> Maximum changed pixel percent (default: 1)',
   '  --crawl                 Discover and scan up to 5 same-origin pages',
   '  --max-pages <number>    Bounded crawl, 1–25 pages (implies --crawl)',
   '  --fail-on <severity>    Non-zero exit if finding is high, medium, or any',
@@ -51,6 +54,9 @@ interface Parsed {
   pluginPaths: string[];
   repro: boolean;
   trace: boolean;
+  visualMode?: 'save' | 'compare';
+  visualBaselineDir?: string;
+  visualThreshold: number;
   failOn?: Threshold;
 }
 
@@ -75,6 +81,9 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   const pluginPaths: string[] = [];
   let repro = false;
   let trace = false;
+  let visualMode: 'save' | 'compare' | undefined;
+  let visualBaselineDir: string | undefined;
+  let visualThreshold = 0.01;
   let explicitMaxPages = false;
   let failOn: Threshold | undefined;
 
@@ -96,6 +105,16 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
     } else if (part === '--evidence') {
       repro = true;
       trace = true;
+    } else if (part === '--visual-save' || part === '--visual-compare') {
+      if (visualMode) throw new Error('Choose either --visual-save or --visual-compare, not both.');
+      visualMode = part === '--visual-save' ? 'save' : 'compare';
+      visualBaselineDir = resolve(requiredValue(args, i++, part));
+    } else if (part === '--visual-threshold') {
+      const percent = Number(requiredValue(args, i++, part));
+      if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+        throw new Error('--visual-threshold must be between 0 and 100.');
+      }
+      visualThreshold = percent / 100;
     } else if (part === '--plugin') {
       pluginPaths.push(requiredValue(args, i++, part));
     } else if (part === '--crawl') {
@@ -125,7 +144,7 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   }
   if (pluginPaths.length > 10) throw new Error('Only up to 10 plugins are supported per scan.');
   return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages,
-    accessibility, pluginPaths, repro, trace, failOn };
+    accessibility, pluginPaths, repro, trace, visualMode, visualBaselineDir, visualThreshold, failOn };
 }
 
 function shouldFail(severities: Severity[], threshold?: Threshold): boolean {
@@ -160,6 +179,13 @@ async function main(): Promise<void> {
     console.log('Generated reproduction tests: ' + generated);
   }
   await writeReports(result, parsed.outputDir);
+  if (result.visualComparisons?.length) {
+    const changed = result.visualComparisons.filter(c =>
+      c.status === 'changed' || c.status === 'dimensions-changed').length;
+    const saved = result.visualComparisons.filter(c => c.status === 'saved').length;
+    console.log('Visual: ' + saved + ' baselines saved; ' + changed +
+      ' changed viewports; ' + result.visualComparisons.length + ' comparisons.');
+  }
   const high = result.findings.filter(f => f.severity === 'high').length;
   const medium = result.findings.filter(f => f.severity === 'medium').length;
   const low = result.findings.filter(f => f.severity === 'low').length;

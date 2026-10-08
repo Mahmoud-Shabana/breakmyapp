@@ -23,3 +23,6 @@ export type { RulePlugin, PluginContext, PluginObservation } from './plugins.js'
 
 export { safeReproUrl, planReproduction, generateReproScript, writeReproductionPacks } from './repro.js';
 export type { ReproKind, ReproPlan } from './repro.js';
+
+export { visualFilename, comparePngBuffers, checkVisualScreenshot } from './visual.js';
+export type { VisualComparison, VisualCheckOptions, VisualStatus } from './visual.js';

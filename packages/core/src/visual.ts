@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 
 export interface VisualViewport { width: number; height: number }
-export type VisualStatus = 'saved' | 'passed' | 'changed' | 'missing-baseline' | 'dimensions-changed';
+export type VisualStatus = 'saved' | 'passed' | 'changed' | 'missing-baseline' | 'dimensions-changed' | 'capture-failed';
 export interface VisualComparison {
   pageUrl: string;
   viewport: VisualViewport;

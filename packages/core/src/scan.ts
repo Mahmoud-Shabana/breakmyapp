@@ -6,6 +6,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { normalizeAxeViolations } from './accessibility.js';
 import { runRulePlugins } from './plugins.js';
 import { PageQueue } from './crawl.js';
+import { checkVisualScreenshot, type VisualComparison } from './visual.js';
 import {
   dedupeResourceProblems,
   problemFromHttpResponse,
@@ -124,12 +125,23 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
     throw new Error('Specify between 1 and 12 viewports.');
   }
   viewports.forEach(assertViewport);
+  if (options.visualMode) {
+    if (!options.visualBaselineDir) throw new Error('Visual mode requires a baseline directory.');
+    const threshold = options.visualThreshold ?? 0.01;
+    if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+      throw new Error('Visual threshold must be between 0 and 100 percent.');
+    }
+    if (viewports.some(v => v.width * v.height > 12_000_000)) {
+      throw new Error('Visual snapshots require viewports of at most 12 million pixels.');
+    }
+  }
   const startedAt = new Date().toISOString();
   await mkdir(join(options.outputDir, 'screenshots'), { recursive: true });
   if (options.trace) await mkdir(join(options.outputDir, 'traces'), { recursive: true });
 
   const findings: Finding[] = [];
   const pagesScanned: string[] = [];
+  const visualComparisons: VisualComparison[] = [];
   const queue = new PageQueue(url, options.maxPages ?? 1);
   const targetOrigin = new URL(url).origin;
   const browser = await chromium.launch({ headless: true });
@@ -313,6 +325,62 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
           }));
         }
 
+        if (options.visualMode && options.visualBaselineDir) {
+          try {
+            // Normalize animation and caret state to reduce incidental differences.
+            const screenshot = await page.screenshot({
+              type: 'png', fullPage: false, animations: 'disabled', caret: 'hide'
+            });
+            const comparison = await checkVisualScreenshot(screenshot, {
+              pageUrl: current,
+              viewport,
+              mode: options.visualMode,
+              baselineDir: options.visualBaselineDir,
+              outputDir: options.outputDir,
+              threshold: options.visualThreshold ?? 0.01
+            });
+            visualComparisons.push(comparison);
+            if (comparison.status === 'changed' || comparison.status === 'dimensions-changed') {
+              const pct = ((comparison.mismatchRatio ?? 0) * 100).toFixed(2);
+              findings.push(newFinding({
+                ruleId: comparison.status === 'changed' ? 'visual.pixel-change' : 'visual.dimension-change',
+                category: 'visual',
+                severity: 'medium',
+                confidence: 'needs-review',
+                title: 'Visual snapshot differs from its baseline',
+                description: comparison.status === 'changed'
+                  ? pct + '% of pixels differ from the approved reference snapshot.'
+                  : 'The baseline and current screenshots have different dimensions.',
+                viewport,
+                evidence: { detail: 'Visual differences may be intentional. Inspect baseline/current/diff images in the report.' }
+              }));
+            } else if (comparison.status === 'missing-baseline') {
+              findings.push(newFinding({
+                ruleId: 'visual.missing-baseline',
+                category: 'visual',
+                severity: 'low',
+                confidence: 'needs-review',
+                title: 'No reference screenshot exists',
+                description: 'Save a baseline for this page and viewport before comparing.',
+                viewport,
+                evidence: { detail: 'Missing baseline is not a visual regression.' }
+              }));
+            }
+          } catch {
+            visualComparisons.push({ pageUrl: current, viewport, status: 'capture-failed' });
+            findings.push(newFinding({
+              ruleId: 'visual.capture-failed',
+              category: 'visual',
+              severity: 'low',
+              confidence: 'needs-review',
+              title: 'Visual screenshot comparison could not complete',
+              description: 'The page could not be captured or its PNG comparison failed.',
+              viewport,
+              evidence: { detail: 'Check filesystem access, image dimensions and installed Sharp binaries.' }
+            }));
+          }
+        }
+
         for (const finding of findings.slice(firstIndex)) {
           finding.pageUrl = current;
           finding.id = fingerprint([current, finding.id]);
@@ -361,6 +429,7 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
     finishedAt: new Date().toISOString(),
     viewports,
     pagesScanned,
+    visualComparisons: options.visualMode ? visualComparisons : undefined,
     findings
   };
 }

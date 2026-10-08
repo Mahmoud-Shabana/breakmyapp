@@ -1,8 +1,9 @@
 import type { RulePlugin } from './plugins.js';
+import type { VisualComparison } from './visual.js';
 
 export type Severity = 'high' | 'medium' | 'low';
 export type Confidence = 'confirmed' | 'needs-review';
-export type Category = 'layout' | 'runtime' | 'resources' | 'navigation' | 'accessibility' | 'plugin';
+export type Category = 'layout' | 'runtime' | 'resources' | 'navigation' | 'accessibility' | 'plugin' | 'visual';
 
 export interface Viewport {
   width: number;
@@ -40,6 +41,7 @@ export interface ScanResult {
   finishedAt: string;
   viewports: Viewport[];
   pagesScanned?: string[];
+  visualComparisons?: VisualComparison[];
   findings: Finding[];
 }
 
@@ -51,6 +53,9 @@ export interface ScanOptions {
   maxPages?: number;
   accessibility?: boolean;
   trace?: boolean;
+  visualMode?: 'save' | 'compare';
+  visualBaselineDir?: string;
+  visualThreshold?: number;
   plugins?: readonly RulePlugin[];
 }
 
