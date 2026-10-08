@@ -10,7 +10,9 @@ export default {
   id: 'community.meta-description',
   description: 'Report pages missing a descriptive meta description.',
   async check({ page }) {
-    const content = await page.locator('meta[name="description"]').first().getAttribute('content');
+    // count() resolves immediately, unlike getAttribute() on a missing locator.
+    const meta = page.locator('meta[name="description"]').first();
+    const content = (await meta.count()) > 0 ? await meta.getAttribute('content') : null;
     if (content?.trim()) return [];
     return [{
       id: 'missing',
