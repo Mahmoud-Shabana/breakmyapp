@@ -5,6 +5,7 @@ The first version is a deliberately small npm workspace.
 ~~~text
 CLI (@breakmyapp/cli)
   -> scanSite (@breakmyapp/core)
+      -> PageQueue (opt-in; 1–25 same-origin pages)
       -> Playwright Chromium
           -> responsive overflow probe (DOM measurements)
           -> pageerror listener (runtime failures)
@@ -19,7 +20,7 @@ CLI (@breakmyapp/cli)
 
 ScanResult includes schemaVersion, toolVersion, a sanitized target URL without a query string, scan timestamps, tested viewport sizes, and findings.
 
-Each finding carries a ruleId, severity, confidence, viewport, stable-ish fingerprint, explanatory text and optional relative screenshot path. Fingerprints help group similar findings; they are not globally unique issue identifiers.
+Each finding carries a ruleId, severity, confidence, page URL, viewport, stable-ish fingerprint, explanatory text and optional relative screenshot path. ScanResult includes the visited page URLs as pagesScanned. Screenshots have a page-specific hash prefix to prevent filename collisions. Fingerprints help group similar findings; they are not globally unique issue identifiers.
 
 ## Rule behavior
 
@@ -33,7 +34,7 @@ Each finding carries a ruleId, severity, confidence, viewport, stable-ish finger
 
 ## Non-goals for v0.1.0
 
-No crawling, arbitrary scripted user journeys, authenticated flows, AI guesses, remote scans or public scan service. Future rules should be developed against reproducible fixtures and should minimize false positives.
+No unrestricted crawling, arbitrary scripted user journeys, authenticated flows, AI guesses, remote scans or public scan service. Explicit crawling uses same-origin link discovery and skips potential action URLs; JavaScript on visited pages is still executed by the browser. Future rules should be developed against reproducible fixtures and should minimize false positives.
 
 ## Security
 

@@ -19,8 +19,14 @@ test('detects real overflow and page errors in Chromium', {
 }, async () => {
   const html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>body{margin:0}.box{width:1000px;height:200px;background:tomato}</style><link rel="stylesheet" href="/missing.css"></head>' +
-    '<body><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
+    '<body><a href="/child">Child page</a><a href="/logout">Do not crawl logout</a><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
   const server = createServer((req, res) => {
+    if (req.url === '/child') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+        '<body><h1>Child</h1><script>throw new Error("child fixture")</script></body></html>');
+      return;
+    }
     if (req.url === '/missing.png' || req.url === '/missing.css') {
       res.writeHead(404, { 'content-type': 'text/plain' });
       res.end('Missing intentionally');
@@ -37,13 +43,22 @@ test('detects real overflow and page errors in Chromium', {
     const report = await scanSite({
       url: 'http://127.0.0.1:' + address.port,
       outputDir: dir,
-      viewports: [{ width: 375, height: 812 }]
+      viewports: [{ width: 375, height: 812 }],
+      maxPages: 2
     });
     const overflow = report.findings.find(f => f.ruleId === 'layout.horizontal-overflow');
     assert.ok(overflow);
     assert.equal(overflow.confidence, 'needs-review');
     assert.ok(overflow.evidence?.candidates?.length);
+    assert.equal(report.pagesScanned?.length, 2);
+    assert.ok(report.pagesScanned?.[1].endsWith('/child'));
+    assert.ok(!report.pagesScanned?.some(p => p.endsWith('/logout')));
     assert.ok(report.findings.some(f => f.ruleId === 'runtime.uncaught-error'));
+    assert.ok(report.findings.some(f => f.pageUrl?.endsWith('/child') &&
+      f.description.includes('child fixture')));
+    const screenshotPaths = [...new Set(report.findings.flatMap(f =>
+      f.evidence?.screenshot ? [f.evidence.screenshot] : []))];
+    assert.ok(screenshotPaths.length >= 2, 'different pages keep distinct screenshots');
     assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&
       f.description.includes('/missing.png')));
     assert.ok(report.findings.some(f => f.ruleId === 'resources.http-error' &&

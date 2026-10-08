@@ -15,12 +15,13 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - 📱 **Responsive overflow detection** at 375×812, 768×1024 and 1440×900, or custom viewport sizes.
 - 🐛 **Browser runtime error tracking** for uncaught JavaScript errors, plus HTTP errors on the main page.
 - 🖼️ **Failed resource detection** for images, scripts and stylesheets returning HTTP 4xx/5xx or experiencing network failures (labelled needs-review).
+- 🔎 **Opt-in same-origin crawling**, up to 25 pages, with conservative URL filtering and per-page evidence.
 - 📸 **Visual evidence**, captured for viewport(s) where findings occur.
 - 📄 **Offline HTML and machine-readable JSON reports**, stored on your own machine.
 - 🛠 **CI-friendly exit codes** with an opt-in --fail-on severity threshold.
 - 🔒 **Local-first:** no account, AI API key, or hosted backend is required.
 
-This release does **not** crawl an entire site, replay arbitrary user journeys, verify button behavior or diagnose visual regressions. A clean report does not mean a bug-free application.
+This release crawls only a bounded set of linked pages when explicitly requested; it does **not** replay arbitrary user journeys, verify button behavior or diagnose visual regressions. A clean report does not mean a bug-free application.
 
 ## 🧭 Studio — visualize and compare scans
 
@@ -72,7 +73,16 @@ Then scan it in terminal two:
 npm run scan -- http://127.0.0.1:4173
 ~~~
 
-The demo deliberately causes layout overflow, a JavaScript exception, and missing image and CSS resources. Open **.breakmyapp/index.html** in your browser. The JSON report lives in **.breakmyapp/report.json**.
+The demo deliberately causes layout overflow, a JavaScript exception, missing image and CSS resources, and a second page linked as /pricing. Open **.breakmyapp/index.html** in your browser. The JSON report lives in **.breakmyapp/report.json**.
+
+To scan **multiple linked pages** of the local demo (default stays one page):
+
+~~~bash
+npm run scan -- http://127.0.0.1:4173 --crawl --viewport 375x812
+npm run scan -- http://127.0.0.1:4173 --max-pages 10 --viewport 375x812
+~~~
+
+The crawler follows anchor links **only on the original origin**, breadth-first, up to 25 pages. It skips external domains, links with query strings, logout/deletion/payment-like paths, downloadable assets and fragments. It never clicks links or submits forms. Starting URL query strings are omitted in crawl mode. Browser JavaScript still executes normally when loading a page, so only test sites you own or have permission to scan. It is **not** a security crawler and does not enforce robots.txt.
 
 To scan a local development server with a custom viewport:
 
@@ -91,14 +101,14 @@ Use **npm test** for TypeScript build and unit tests. After installing Chromium,
 ## What you'll get
 
 - A local, readable HTML report with finding cards, severity labels and screenshots.
-- A structured JSON report with rule IDs, viewports, evidence and stable-ish finding fingerprints.
+- A structured JSON report with rule IDs, page URLs, tested pages, viewports, evidence and page-aware finding fingerprints.
 - Meaningful exit codes: 0 for successful scan (unless --fail-on triggers); 1 for operational errors; 2 for requested severity threshold.
 
 > **Privacy:** screenshots and exception messages may include private data. Report folders are ignored by Git. Do not upload them publicly without reviewing their contents. URLs with credentials are rejected, and query strings are removed from the saved target address.
 
 ## Architecture
 
-- **packages/core** — Playwright runner, diagnostic rules, evidence capture and report generation.
+- **packages/core** — Playwright runner, bounded link queue, diagnostic rules, evidence capture and report generation.
 - **packages/cli** — argument parsing, summary output and exit codes.
 - **examples/broken-site** — a reproducible, intentionally broken demonstration page.
 

@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BreakMyApp Demo — Pricing</title>
+<style>body{font:18px/1.5 system-ui;background:#101728;color:#eef;padding:2rem}a{color:#86edc5}</style>
+</head>
+<body>
+<h1>Pricing test page</h1>
+<p>This is a second, same-origin page for testing bounded crawling.</p>
+<a href="/">Back home</a>
+<script>setTimeout(() => { throw new Error('Demo pricing page crash'); }, 40);</script>
+</body>
+</html>

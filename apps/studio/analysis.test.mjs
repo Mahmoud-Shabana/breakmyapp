@@ -25,3 +25,12 @@ test('search filters combine correctly',()=>{
  assert.equal(filterFindings(x,{change:'resolved'}).length,1);
 });
 test('GitHub issue includes context',()=>assert.match(makeIssue(finding('a'),'http://localhost'),/Viewport: 375x812/));
+
+test('same rule on different pages is distinct during comparison',()=>{
+ const a={...finding('same'),pageUrl:'http://localhost/a'};
+ const b={...finding('same'),pageUrl:'http://localhost/b'};
+ const result=compareReports(report([b]),report([a]));
+ assert.equal(result.counts.new,1);
+ assert.equal(result.counts.resolved,1);
+ assert.match(makeIssue(b,'http://localhost'),/Page: http:\/\/localhost\/b/);
+});

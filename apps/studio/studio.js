@@ -36,7 +36,9 @@ function listItem(f,index){
  if(state.selected===index)card.classList.add('selected');
  const head=el('div','','issue-header');head.append(el('strong',f.title),el('span','↗'));
  const meta=el('div','','meta');meta.append(el('span',f.severity.toUpperCase(),'tag '+f.severity),
- el('span',f.change.toUpperCase(),'tag '+f.change),el('span',f.viewport.width+' × '+f.viewport.height),el('span',f.ruleId));
+ el('span',f.change.toUpperCase(),'tag '+f.change),el('span',f.viewport.width+' × '+f.viewport.height),
+ f.pageUrl ? el('span',new URL(f.pageUrl).pathname) : el('span',''),
+ el('span',f.ruleId));
  card.append(head,el('p',f.description,'issue-desc'),meta);
  card.addEventListener('click',()=>{state.selected=index;renderList();showDetail(f);});
  return card;
@@ -60,7 +62,9 @@ function showDetail(f){
  const box=$('#inspector');box.replaceChildren(el('span','INSPECTION DETAILS','subheading'),el('h3',f.title),el('p',f.description));
  detailRow(box,'Severity',f.severity.toUpperCase());detailRow(box,'Confidence',f.confidence);
  detailRow(box,'Change',f.change);detailRow(box,'Viewport',f.viewport.width+' × '+f.viewport.height);
- detailRow(box,'Rule ID',f.ruleId);if(f.selector)detailRow(box,'Element',f.selector);
+ detailRow(box,'Rule ID',f.ruleId);
+ if(f.pageUrl)detailRow(box,'Page',f.pageUrl);
+ if(f.selector)detailRow(box,'Element',f.selector);
  if(f.evidence?.detail)box.append(el('div',String(f.evidence.detail),'evidence'));
  if(f.evidence?.screenshot)box.append(el('p','Screenshot: '+f.evidence.screenshot+'. Open the original scanner HTML report to see images.'));
  const actions=el('div','','detail-actions');const copy=el('button','Copy GitHub issue');
