@@ -15,6 +15,8 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - 📱 **Responsive overflow detection** at 375×812, 768×1024 and 1440×900, or custom viewport sizes.
 - 🐛 **Browser runtime error tracking** for uncaught JavaScript errors, plus HTTP errors on the main page.
 - 🖼️ **Failed resource detection** for images, scripts and stylesheets returning HTTP 4xx/5xx or experiencing network failures (labelled needs-review).
+- ♿ **Opt-in accessibility auditing** using axe-core and per-element WCAG guidance.
+- 🧩 **Local community rule plugins** to add custom checks without modifying the core.
 - 🔎 **Opt-in same-origin crawling**, up to 25 pages, with conservative URL filtering and per-page evidence.
 - 📸 **Visual evidence**, captured for viewport(s) where findings occur.
 - 📄 **Offline HTML and machine-readable JSON reports**, stored on your own machine.
@@ -73,6 +75,15 @@ Then scan it in terminal two:
 npm run scan -- http://127.0.0.1:4173
 ~~~
 
+Try the accessibility audit and an opt-in local plugin:
+
+~~~bash
+npm run scan -- http://127.0.0.1:4173 --a11y
+npm run scan -- http://127.0.0.1:4173 --a11y --plugin ./examples/plugins/meta-description.mjs
+~~~
+
+Automated checks do not certify WCAG compliance. Plugins run as normal JavaScript with full Node.js permissions; use only trusted plugin files. See [docs/plugins.md](docs/plugins.md).
+
 The demo deliberately causes layout overflow, a JavaScript exception, missing image and CSS resources, and a second page linked as /pricing. Open **.breakmyapp/index.html** in your browser. The JSON report lives in **.breakmyapp/report.json**.
 
 To scan **multiple linked pages** of the local demo (default stays one page):
@@ -108,7 +119,7 @@ Use **npm test** for TypeScript build and unit tests. After installing Chromium,
 
 ## Architecture
 
-- **packages/core** — Playwright runner, bounded link queue, diagnostic rules, evidence capture and report generation.
+- **packages/core** — Playwright runner, bounded link queue, axe-core adapter, local rule SDK, evidence capture and reports.
 - **packages/cli** — argument parsing, summary output and exit codes.
 - **examples/broken-site** — a reproducible, intentionally broken demonstration page.
 
@@ -119,9 +130,10 @@ Learn more in [docs/architecture.md](docs/architecture.md) and [docs/crawling.md
 - [x] First real-browser scanner with evidence and offline reports.
 - [x] Detect failed static resources with conservative classification and privacy-safe URLs.
 - [x] Bounded same-origin page discovery with per-page evidence and Studio comparison.
-- [ ] Integrate axe-core accessibility rules.
+- [x] Integrate opt-in axe-core WCAG A/AA checks (developer preview).
 - [ ] Add baselines for image-diff visual regression.
-- [ ] Rule plugin SDK and shareable community packs.
+- [x] Implement the initial opt-in local rule SDK with an example plugin.
+- [ ] Stabilize the SDK with isolation and a vetted community rules catalog.
 - [ ] Optional AI-assisted explanations (without requiring an API key).
 - [ ] Firefox and WebKit support.
 

@@ -66,6 +66,18 @@ function showDetail(f){
  if(f.pageUrl)detailRow(box,'Page',f.pageUrl);
  if(f.selector)detailRow(box,'Element',f.selector);
  if(f.evidence?.detail)box.append(el('div',String(f.evidence.detail),'evidence'));
+ if(f.evidence?.impact)detailRow(box,'Axe impact',f.evidence.impact);
+ if(f.evidence?.helpUrl){
+  try {
+   const url=new URL(f.evidence.helpUrl);
+   if(url.protocol==='https:' &&
+      (url.hostname==='dequeuniversity.com'||url.hostname.endsWith('.dequeuniversity.com'))){
+    const link=el('a','Read axe rule guidance ↗');link.href=url.href;
+    link.target='_blank';link.rel='noopener noreferrer';link.style.color='#8eebc7';
+    box.append(link);
+   }
+  }catch{/* Ignore untrusted imported links. */}
+ }
  if(f.evidence?.screenshot)box.append(el('p','Screenshot: '+f.evidence.screenshot+'. Open the original scanner HTML report to see images.'));
  const actions=el('div','','detail-actions');const copy=el('button','Copy GitHub issue');
  copy.addEventListener('click',async()=>{

@@ -48,3 +48,7 @@ Studio lives in `apps/studio/` and runs using `npm run studio`. It does not need
 ## Multi-page scanner development
 
 Use `npm run demo` followed by `npm run scan -- http://127.0.0.1:4173 --crawl --viewport 375x812` to exercise page discovery and page-aware screenshots. Run `npm test` for the pure PageQueue tests and `npm run test:browser` for Chromium integration checks. The crawler is intentionally conservative; changes to URL eligibility require a clear security rationale, regression tests, and backwards-compatibility considerations for JSON reports.
+
+## Community rules
+
+See [docs/plugins.md](docs/plugins.md) and [the meta-description example](examples/plugins/meta-description.mjs). Add deterministic rules and positive/negative fixtures. Default to needs-review for ambiguous problems. The SDK is experimental. Never run untrusted code on your personal machine.

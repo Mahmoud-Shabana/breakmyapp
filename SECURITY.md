@@ -21,3 +21,7 @@ Supported versions: currently under active early-preview development; security f
 ## Opt-in multi-page discovery
 
 The `--crawl` / `--max-pages` modes are bounded to 25 URLs and follow only same-origin anchors. They skip URLs with query parameters, common action-like path segments and files, and they do not click buttons or submit forms. Nevertheless, loading a page executes its JavaScript, which can perform network requests. These heuristics **do not guarantee that a crawl is side-effect free**. Test only a site you own or are explicitly authorized to scan, ideally a staging environment. Cross-origin top-level navigations are blocked by the browser runner, but third-party assets can still be requested as part of normal page rendering.
+
+## Local plugin execution
+
+Custom --plugin modules execute with full Node.js and Playwright permissions, **not inside a sandbox**. A plugin can access local files, credentials and networks. Only run plugins you wrote or audited, preferably within an isolated environment. Never execute arbitrary community plugin URLs or auto-install plugin code.

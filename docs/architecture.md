@@ -11,6 +11,8 @@ CLI (@breakmyapp/cli)
           -> pageerror listener (runtime failures)
           -> response/requestfailed listeners (static asset failures)
           -> main navigation HTTP status check
+          -> axe-core accessibility audit (opt-in)
+          -> community rule plugins (opt-in)
           -> per-viewport screenshot evidence
       -> typed ScanResult v1
   -> HTML and JSON reporter
@@ -39,3 +41,9 @@ No unrestricted crawling, arbitrary scripted user journeys, authenticated flows,
 ## Security
 
 The HTML report is built from escaped text with no external dependencies. Screenshot paths are generated internally; the report does not embed scripts from the scanned page. Artifacts stay in a local directory and may contain sensitive data. See SECURITY.md.
+
+## Accessibility & extensibility
+
+The optional --a11y flag invokes @axe-core/playwright against each loaded viewport. It normalizes results to per-element findings, with axe impact, failure text and a trusted Deque guidance URL. Automation does not establish WCAG compliance.
+
+The optional --plugin flag imports local trusted .mjs JavaScript modules exposing check({page,url,viewport}); see [plugins.md](plugins.md). Plugins have full Node.js privileges and are not sandboxed.

@@ -19,7 +19,7 @@ test('detects real overflow and page errors in Chromium', {
 }, async () => {
   const html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>body{margin:0}.box{width:1000px;height:200px;background:tomato}</style><link rel="stylesheet" href="/missing.css"></head>' +
-    '<body><a href="/child">Child page</a><a href="/logout">Do not crawl logout</a><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
+    '<body><button></button><a href="/child">Child page</a><a href="/logout">Do not crawl logout</a><div class="box"></div><img src="/missing.png" alt="Missing fixture"><script>setTimeout(()=>{throw new Error("fixture crash")},20)</script></body></html>';
   let sawExplicitQuery = false;
   const server = createServer((req, res) => {
     if (req.url === '/?preview=true') sawExplicitQuery = true;
@@ -46,7 +46,14 @@ test('detects real overflow and page errors in Chromium', {
       url: 'http://127.0.0.1:' + address.port,
       outputDir: dir,
       viewports: [{ width: 375, height: 812 }],
-      maxPages: 2
+      maxPages: 2,
+      accessibility: true,
+      plugins: [{
+        id: 'community.test-rule',
+        description: 'Records a plugin finding',
+        check: async () => [{ id: 'observed', title: 'Fixture observation',
+          description: 'Test plugin ran in the browser.', severity: 'low' as const }]
+      }]
     });
     const overflow = report.findings.find(f => f.ruleId === 'layout.horizontal-overflow');
     assert.ok(overflow);
@@ -55,6 +62,10 @@ test('detects real overflow and page errors in Chromium', {
     assert.equal(report.pagesScanned?.length, 2);
     assert.ok(report.pagesScanned?.[1].endsWith('/child'));
     assert.ok(!report.pagesScanned?.some(p => p.endsWith('/logout')));
+    assert.ok(report.findings.some(f => f.ruleId === 'a11y.button-name'),
+      'axe should detect a button without an accessible name');
+    assert.ok(report.findings.some(f => f.ruleId === 'plugin.community.test-rule.observed'),
+      'custom plugin should run against visited pages');
     assert.ok(report.findings.some(f => f.ruleId === 'runtime.uncaught-error'));
     assert.ok(report.findings.some(f => f.pageUrl?.endsWith('/child') &&
       f.description.includes('child fixture')));
