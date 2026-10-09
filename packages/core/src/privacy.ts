@@ -30,5 +30,5 @@ export function safeDiagnosticMessage(input: unknown, maxLength = 500): string {
 export function safeNetworkFailure(input: unknown): string {
   const text = String(input ?? '');
   const code = text.match(/\b(?:net::)?ERR_[A-Z0-9_]+\b/i)?.[0];
-  return code ? code.toUpperCase() : 'network request failed';
+  return code ?? 'network request failed';
 }

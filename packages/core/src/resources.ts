@@ -1,3 +1,5 @@
+import { safeNetworkFailure } from './privacy.js';
+
 /**
  * Resource diagnostics are deliberately conservative: a failed request is
  * evidence of a network problem, not proof of a user-visible application bug.
@@ -58,7 +60,7 @@ export function problemFromNetworkFailure(
     kind: 'network-error',
     resourceType: resourceType as StaticResourceType,
     address,
-    reason: errorText.slice(0, 100).replace(/[\r\n\t]/g, ' ')
+    reason: safeNetworkFailure(errorText)
   };
 }
 

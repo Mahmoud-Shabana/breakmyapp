@@ -6,6 +6,8 @@ import {
   writeReports,
   writeReproductionPacks,
   validateRulePlugin,
+  publicUrl,
+  safeDiagnosticMessage,
   type RulePlugin,
   type Severity,
   type Viewport
@@ -171,7 +173,7 @@ async function main(): Promise<void> {
     validateRulePlugin(module.default);
     plugins.push(module.default);
   }
-  console.log('\nBreakMyApp v0.1.0 — scanning ' + parsed.url);
+  console.log('\nBreakMyApp v0.1.0 — scanning ' + publicUrl(parsed.url));
   console.log('Browser: Chromium | Local report: ' + parsed.outputDir + '\n');
   const result = await scanSite({ ...parsed, plugins });
   if (parsed.repro) {
@@ -206,7 +208,7 @@ async function main(): Promise<void> {
 }
 
 main().catch(error => {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = safeDiagnosticMessage(error);
   console.error('\nBreakMyApp error: ' + message);
   if (/Executable doesn't exist|browserType\.launch|downloaded/i.test(message)) {
     console.error('Install the browser first: npx playwright install chromium');

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { normalizeAxeViolations } from './accessibility.js';
+import { safeDiagnosticMessage } from './privacy.js';
 import { runRulePlugins } from './plugins.js';
 import { PageQueue } from './crawl.js';
 import { checkVisualScreenshot, type VisualComparison } from './visual.js';
@@ -173,7 +174,7 @@ export async function scanSite(options: ScanOptions): Promise<ScanResult> {
         const errors: string[] = [];
         const resourceProblems: ResourceProblem[] = [];
         page.on('pageerror', error => {
-          if (errors.length < 20) errors.push(error.message);
+          if (errors.length < 20) errors.push(safeDiagnosticMessage(error));
         });
         // Register listeners before navigation; otherwise early failures are missed.
         page.on('response', response => {

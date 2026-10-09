@@ -31,3 +31,14 @@ test('deduplicates repeated resource errors', () => {
   const problem = problemFromHttpResponse('https://example.test/error.css', 'stylesheet', 500)!;
   assert.equal(dedupeResourceProblems([problem, problem, problem]).length, 1);
 });
+
+test('network failure diagnostics never echo secrets or arbitrary driver text', () => {
+  const problem = problemFromNetworkFailure(
+    'https://example.test/app.js?auth=hidden-token',
+    'script',
+    'proxy failure on https://example.test/x?apiKey=private-value'
+  );
+  assert.equal(problem?.reason, 'network request failed');
+  assert.ok(!JSON.stringify(problem).includes('private-value'));
+  assert.ok(!JSON.stringify(problem).includes('hidden-token'));
+});

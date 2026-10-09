@@ -24,7 +24,7 @@ test('obscures passwords from URLs in driver errors', () => {
 });
 test('normalizes potentially private network error detail to a code', () => {
   assert.equal(safeNetworkFailure('net::ERR_CONNECTION_REFUSED at https://site.test?token=abc'),
-    'NET::ERR_CONNECTION_REFUSED');
+    'net::ERR_CONNECTION_REFUSED');
   assert.equal(safeNetworkFailure('Proxy denied /private?key=abc'), 'network request failed');
 });
 test('bounds and normalizes diagnostic output', () => {

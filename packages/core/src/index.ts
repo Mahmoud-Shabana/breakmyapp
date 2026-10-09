@@ -26,3 +26,5 @@ export type { ReproKind, ReproPlan } from './repro.js';
 
 export { visualFilename, comparePngBuffers, checkVisualScreenshot } from './visual.js';
 export type { VisualComparison, VisualCheckOptions, VisualStatus } from './visual.js';
+
+export { publicUrl, safeDiagnosticMessage, safeNetworkFailure } from './privacy.js';

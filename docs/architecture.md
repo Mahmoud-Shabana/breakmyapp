@@ -55,3 +55,7 @@ The optional --plugin flag imports local trusted .mjs JavaScript modules exposin
 ## Visual regression
 
 When enabled, `checkVisualScreenshot()` compares a viewport screenshot with a saved baseline keyed by sanitized URL and viewport. `comparePngBuffers()` counts changed pixels using a fixed per-channel tolerance, with a separate maximum mismatch ratio. Each comparison is recorded in `ScanResult.visualComparisons`; differences yield `visual.pixel-change` findings marked needs-review. The offline HTML report renders protected relative URLs under `visual/{baseline,current,diff}/`. See [visual-regression.md](visual-regression.md) for capture reproducibility limits.
+
+## Console and diagnostic redaction
+
+The CLI prints only a sanitized target URL (no query, fragment, or URL-embedded credentials). Playwright browser-exception messages are normalized before becoming findings, and static-resource network failures store a recognized browser error code instead of arbitrary driver text. This reduces accidental leakage into logs and reports but **does not redact screenshots, traces, or arbitrary data emitted by trusted community plugins**. Tests: `packages/core/src/test/privacy.test.ts` and `resources.test.ts`.
