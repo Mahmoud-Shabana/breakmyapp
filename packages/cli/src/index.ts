@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import {
   scanSite,
@@ -8,6 +9,9 @@ import {
   validateRulePlugin,
   publicUrl,
   safeDiagnosticMessage,
+  compareScanReports,
+  shouldFailOnNew,
+  type ScanResult,
   type RulePlugin,
   type Severity,
   type Viewport
@@ -35,6 +39,8 @@ const USAGE = [
   '  --crawl                 Discover and scan up to 5 same-origin pages',
   '  --max-pages <number>    Bounded crawl, 1–25 pages (implies --crawl)',
   '  --fail-on <severity>    Non-zero exit if finding is high, medium, or any',
+  '  --baseline-report <file> Compare against an earlier report.json',
+  '  --fail-on-new <severity> Exit 2 only for new high, medium, or any findings',
   '  -h, --help              Show this help',
   '  --version               Show version',
   '',
@@ -60,6 +66,8 @@ interface Parsed {
   visualBaselineDir?: string;
   visualThreshold: number;
   failOn?: Threshold;
+  baselineReport?: string;
+  failOnNew?: Threshold;
 }
 
 function requiredValue(args: string[], index: number, flag: string): string {
@@ -88,6 +96,8 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
   let visualThreshold = 0.01;
   let explicitMaxPages = false;
   let failOn: Threshold | undefined;
+  let failOnNew: Threshold | undefined;
+  let baselineReport: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const part = args[i];
@@ -126,6 +136,14 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
       explicitMaxPages = true;
     } else if (part === '--timeout-ms') {
       timeoutMs = Number(requiredValue(args, i++, part));
+    } else if (part === '--baseline-report') {
+      baselineReport = resolve(requiredValue(args, i++, part));
+    } else if (part === '--fail-on-new') {
+      const value = requiredValue(args, i++, part);
+      if (value !== 'high' && value !== 'medium' && value !== 'any') {
+        throw new Error('--fail-on-new accepts high, medium, or any.');
+      }
+      failOnNew = value;
     } else if (part === '--fail-on') {
       const value = requiredValue(args, i++, part);
       if (value !== 'high' && value !== 'medium' && value !== 'any') {
@@ -145,8 +163,10 @@ function parseArgs(args: string[]): Parsed | 'help' | 'version' {
     throw new Error('--max-pages must be an integer between 1 and 25.');
   }
   if (pluginPaths.length > 10) throw new Error('Only up to 10 plugins are supported per scan.');
+  if (failOnNew && !baselineReport) throw new Error('--fail-on-new requires --baseline-report <file>.');
   return { url, outputDir: resolve(outputDir), viewports, timeoutMs, maxPages,
-    accessibility, pluginPaths, repro, trace, visualMode, visualBaselineDir, visualThreshold, failOn };
+    accessibility, pluginPaths, repro, trace, visualMode, visualBaselineDir, visualThreshold,
+    failOn, baselineReport, failOnNew };
 }
 
 function shouldFail(severities: Severity[], threshold?: Threshold): boolean {
@@ -173,6 +193,12 @@ async function main(): Promise<void> {
     validateRulePlugin(module.default);
     plugins.push(module.default);
   }
+  let baseline: ScanResult | undefined;
+  if (parsed.baselineReport) {
+    const details = await stat(parsed.baselineReport);
+    if (details.size > 50_000_000) throw new Error('Baseline report exceeds the 50 MB limit.');
+    baseline = JSON.parse(await readFile(parsed.baselineReport, 'utf8')) as ScanResult;
+  }
   console.log('\nBreakMyApp v0.1.0 — scanning ' + publicUrl(parsed.url));
   console.log('Browser: Chromium | Local report: ' + parsed.outputDir + '\n');
   const result = await scanSite({ ...parsed, plugins });
@@ -181,6 +207,13 @@ async function main(): Promise<void> {
     console.log('Generated reproduction tests: ' + generated);
   }
   await writeReports(result, parsed.outputDir);
+  const regression = baseline ? compareScanReports(result, baseline) : undefined;
+  if (regression) {
+    await writeFile(join(parsed.outputDir, 'regression.json'), JSON.stringify(regression, null, 2) + '\n', 'utf8');
+    console.log('Regression: ' + regression.counts.new + ' new, ' +
+      regression.counts.existing + ' existing, ' + regression.counts.resolved +
+      ' resolved. JSON: ' + join(parsed.outputDir, 'regression.json'));
+  }
   if (result.visualComparisons?.length) {
     const changed = result.visualComparisons.filter(c =>
       c.status === 'changed' || c.status === 'dimensions-changed').length;
@@ -202,7 +235,8 @@ async function main(): Promise<void> {
   if (result.findings.length > 15) console.log('  ... more findings in the report');
   console.log('\nJSON: ' + resolve(parsed.outputDir, 'report.json'));
   console.log('HTML: ' + resolve(parsed.outputDir, 'index.html'));
-  if (shouldFail(result.findings.map(f => f.severity), parsed.failOn)) {
+  if (shouldFail(result.findings.map(f => f.severity), parsed.failOn) ||
+      (regression && shouldFailOnNew(regression.newFindings, parsed.failOnNew))) {
     process.exitCode = 2;
   }
 }

@@ -28,3 +28,6 @@ export { visualFilename, comparePngBuffers, checkVisualScreenshot } from './visu
 export type { VisualComparison, VisualCheckOptions, VisualStatus } from './visual.js';
 
 export { publicUrl, safeDiagnosticMessage, safeNetworkFailure } from './privacy.js';
+
+export { compareScanReports, findingIdentity, shouldFailOnNew } from './regression.js';
+export type { RegressionReport, RegressionThreshold } from './regression.js';
