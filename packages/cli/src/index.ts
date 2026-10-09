@@ -198,6 +198,12 @@ async function main(): Promise<void> {
     const details = await stat(parsed.baselineReport);
     if (details.size > 50_000_000) throw new Error('Baseline report exceeds the 50 MB limit.');
     baseline = JSON.parse(await readFile(parsed.baselineReport, 'utf8')) as ScanResult;
+    if (baseline?.schemaVersion !== 1 || !Array.isArray(baseline.findings)) {
+      throw new Error('Invalid baseline report: expected schemaVersion 1 and findings array.');
+    }
+    if (baseline.target !== publicUrl(parsed.url)) {
+      throw new Error('Baseline target does not match the selected scan URL.');
+    }
   }
   console.log('\nBreakMyApp v0.1.0 — scanning ' + publicUrl(parsed.url));
   console.log('Browser: Chromium | Local report: ' + parsed.outputDir + '\n');

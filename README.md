@@ -76,6 +76,21 @@ npm run test:studio
 
 ---
 
+## CI regression gate — fail only when new bugs appear
+
+Use a saved BreakMyApp `report.json` as a baseline. The scanner detects which findings were already present, newly introduced, or resolved, and writes a machine-readable `regression.json`.
+
+~~~bash
+# First: save a reference from an authorized development site
+npm run scan -- http://127.0.0.1:4173 --viewport 375x812 -o .breakmyapp/reference
+
+# Later, after your code changes:
+npm run scan -- http://127.0.0.1:4173 --viewport 375x812 -o .breakmyapp/latest --baseline-report .breakmyapp/reference/report.json --fail-on-new medium
+~~~
+
+The second command exits with code **2** only if new high- or medium-severity findings appear; existing problems do not fail it. Choose `--fail-on-new high` or `--fail-on-new any` as needed. Omit `--fail-on-new` to see the comparison without gating. Both reports must represent the **same sanitized target URL**. The earlier report is read before writing the new one, so it remains safe if you intentionally reuse an output folder.
+
+The comparison matches findings by page, rule ID, viewport and stable identifying detail. It is heuristic and may still classify a changing runtime exception as new. Do not pair `--fail-on` with `--fail-on-new` if you only want to gate regressions. Details: [CI Regression Gate](docs/regression-gate.md).
 ## Local-installable CLI package preview
 
 Before publishing anything to npm, you can **build a private local package** that includes the compiled CLI and core together, without requiring the unpublished `@breakmyapp/core` dependency:

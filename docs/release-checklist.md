@@ -35,6 +35,10 @@ npm run verify:release
 - `npm run test:smoke:fixture`: checks that the installed-scanner smoke harness rejects missing or meaningless reports without launching Chromium.
 - `npm run verify:release`: executes the full local gates, including a real browser scan from the independently installed package, and must finish with exit code 0.
 
+## Regression-gate smoke test
+
+Save a reference scan and run the same fixture with `--baseline-report <old-report.json> --fail-on-new medium`. Expect `regression.json` to report zero new findings. Verify the command exits 2 when a new high/medium issue is deliberately introduced. Automated comparison is heuristic; do not call a passed gate proof that a site has no bugs.
+
 ## User-facing smoke test
 
 Open three terminals if necessary. Start the deliberately broken website with `npm run demo`, then:

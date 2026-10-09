@@ -68,3 +68,7 @@ Run `npm run test:offline` first to verify the dependency-free tools, then `npm 
 ## Test the distributable tarball
 
 Use `npm run test:consumer:fixture` for an offline, zero-external-dependency package installation test; it builds and executes a synthetic compiled CLI in a clean consumer. After installing the real workspace dependencies and Chromium, run `npm run test:consumer` to pack and install the actual compiled product in a disposable temporary consumer. A successful fixture is **not** proof that the real scanner's dependencies, browser and native Sharp binaries install correctly. Never publish or tag a release without a clean environment verification.
+
+## New-finding CI gates
+
+If you change the comparison algorithm, update `packages/core/src/test/regression.test.ts` and [docs/regression-gate.md](docs/regression-gate.md). Tests must cover duplicate IDs, differing pages, resource HTTP status changes, and severity thresholds. `--fail-on-new` should never fail due solely to existing findings in the baseline. Keep baseline and current reports on the same sanitized target URL.
