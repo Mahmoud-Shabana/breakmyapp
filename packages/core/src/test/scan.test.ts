@@ -96,14 +96,15 @@ test('detects real overflow and page errors in Chromium', {
   }
 });
 
-test('single-page scans preserve required query params but redact them from the report', {
+test('single-page scan uses query params for navigation but redacts browser errors and reports', {
   skip: process.env.BREAKMYAPP_BROWSER_TESTS !== '1'
 }, async () => {
   let sawQuery = false;
   const server = createServer((req, res) => {
-    if (req.url === '/?preview=yes') sawQuery = true;
+    if (req.url === '/?preview=yes&access_token=private-token') sawQuery = true;
     res.writeHead(200, { 'content-type': 'text/html' });
-    res.end('<!doctype html><html><body><h1>Query fixture</h1></body></html>');
+    res.end('<!doctype html><html><body><h1>Query fixture</h1>' +
+      '<script>setTimeout(()=>{throw new Error("Page URL: " + location.href)},30)</script></body></html>');
   });
   const dir = await mkdtemp(join(tmpdir(), 'breakmyapp-query-'));
   try {
@@ -111,13 +112,17 @@ test('single-page scans preserve required query params but redact them from the 
     const addr = server.address();
     assert.ok(addr && typeof addr !== 'string');
     const report = await scanSite({
-      url: 'http://127.0.0.1:' + addr.port + '/?preview=yes',
+      url: 'http://127.0.0.1:' + addr.port + '/?preview=yes&access_token=private-token',
       outputDir: dir,
       viewports: [{ width: 375, height: 812 }]
     });
     assert.equal(sawQuery, true);
-    assert.ok(!report.target.includes('preview=yes'));
-    assert.ok(!report.pagesScanned?.[0].includes('preview=yes'));
+    assert.ok(!report.target.includes('private-token'));
+    assert.ok(!report.pagesScanned?.[0].includes('private-token'));
+    assert.ok(report.findings.some(f => f.ruleId === 'runtime.uncaught-error'),
+      'the URL-bearing error should still be detected');
+    assert.ok(!JSON.stringify(report).includes('private-token'),
+      'the query token must never appear in serialized findings');
   } finally {
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     await rm(dir, { recursive: true, force: true });
