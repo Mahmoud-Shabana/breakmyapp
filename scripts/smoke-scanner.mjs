@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-async function runCli(entry, cwd, args, timeoutMs = 120_000) {
+async function runCli(entry, cwd, args, timeoutMs = 120_000, expectedExit = 0) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [entry, ...args], { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
@@ -15,7 +15,7 @@ async function runCli(entry, cwd, args, timeoutMs = 120_000) {
     child.on('error', error => { clearTimeout(timer); reject(error); });
     child.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) reject(Error('Installed scanner exited ' + code + ': ' + stderr.slice(-1500) + stdout.slice(-1000)));
+      if (code !== expectedExit) reject(Error('Installed scanner exited ' + code + ' (expected ' + expectedExit + '): ' + stderr.slice(-1500) + stdout.slice(-1000)));
       else resolve({ stdout, stderr });
     });
   });
@@ -28,6 +28,7 @@ export async function smokeInstalledScanner({ entry, cwd, withAccessibility = tr
     '<style>body{margin:0}.wide{width:1200px;height:90px}</style><link rel="stylesheet" href="/missing.css"></head>' +
     '<body><button></button><div class="wide">Wide component</div><img src="/missing.png" alt="Fixture">' +
     '<a href="/details">Visit details</a><script>setTimeout(()=>{throw Error("bma fixture crash")},30)</script></body></html>';
+  let introduceRegression = false;
   const server = createServer((req, res) => {
     if (req.url === '/details') {
       res.writeHead(200, { 'content-type': 'text/html' });
@@ -35,7 +36,10 @@ export async function smokeInstalledScanner({ entry, cwd, withAccessibility = tr
     } else if (req.url === '/missing.png' || req.url === '/missing.css') {
       res.writeHead(404, { 'content-type': 'text/plain' }); res.end('Missing fixture');
     } else {
-      res.writeHead(200, { 'content-type': 'text/html' }); res.end(page);
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(introduceRegression
+        ? page.replace('</body>', '<script>setTimeout(()=>{throw Error("CI regression fixture")},40)</script></body>')
+        : page);
     }
   });
   const temp = await mkdtemp(join(tmpdir(), 'bma-packaged-browser-'));
@@ -61,7 +65,31 @@ export async function smokeInstalledScanner({ entry, cwd, withAccessibility = tr
     if (!html.includes('Findings') || !html.includes('Download reproducer')) throw Error('Installed scanner report is incomplete');
     const repro = result.findings.find(f => f.evidence?.repro).evidence.repro;
     await access(join(output, repro));
-    return { pages: visited.length, findings: result.findings.length, rules: [...rules].sort() };
+
+    // A repeat scan of the same site must not fail due solely to existing bugs.
+    const baselineFile = join(output, 'report.json');
+    const unchangedDir = join(temp, 'unchanged');
+    const gateArgs = ['scan', url, '-o', unchangedDir, '--viewport', '375x812',
+      '--max-pages', '2', '--baseline-report', baselineFile, '--fail-on-new', 'high'];
+    await runCli(entry, cwd, gateArgs);
+    const unchanged = JSON.parse(await readFile(join(unchangedDir, 'regression.json'), 'utf8'));
+    if (unchanged.counts.new !== 0) {
+      throw Error('Unchanged fixture produced new findings in CI regression comparison');
+    }
+
+    // Introduce a second, distinct uncaught exception and require exit code 2.
+    introduceRegression = true;
+    const changedDir = join(temp, 'changed');
+    await runCli(entry, cwd, ['scan', url, '-o', changedDir, '--viewport', '375x812',
+      '--max-pages', '2', '--baseline-report', baselineFile, '--fail-on-new', 'high'],
+      120_000, 2);
+    const changed = JSON.parse(await readFile(join(changedDir, 'regression.json'), 'utf8'));
+    if (changed.counts.new < 1 || !changed.newFindings.some(f =>
+      f.ruleId === 'runtime.uncaught-error' && f.description.includes('CI regression fixture'))) {
+      throw Error('CI regression gate did not detect the introduced uncaught exception');
+    }
+    return { pages: visited.length, findings: result.findings.length,
+      rules: [...rules].sort(), regressionGate: true };
   } finally {
     await new Promise(resolve => server.close(resolve));
     await rm(temp, { recursive: true, force: true });
