@@ -25,7 +25,7 @@ BreakMyApp is an open-source, local-first website bug scanner. It uses a real Ch
 - 🛠 **CI-friendly exit codes** with an opt-in --fail-on severity threshold.
 - 🔒 **Local-first:** no account, AI API key, or hosted backend is required.
 
-This release crawls only a bounded set of linked pages when explicitly requested. It supports **pixel-based** visual regression checks, but does **not** replay arbitrary user journeys, verify button behavior, or determine whether design changes are intentional. A clean report does not mean a bug-free application. A clean report does not mean a bug-free application.
+This release crawls only a bounded set of linked pages when explicitly requested. It supports **pixel-based** visual regression checks, but does **not** replay arbitrary user journeys, verify button behavior, or determine whether design changes are intentional. A clean report does not mean a bug-free application.
 
 ## 🖼️ Visual regression — compare what your users see
 
