@@ -10,7 +10,7 @@ Thanks for helping make bug reports more useful.
 
 ## Local development
 
-You need Node.js 20+ and npm.
+You need **Node.js 22.12.0 or newer** and npm, as required by the root `package.json` (`engines.node`).
 
 ~~~bash
 npm install
@@ -31,7 +31,7 @@ The project does not depend on GitHub Actions: run build and tests locally, and 
 
 ## Adding detectors
 
-The scanner currently has built-in rules. A public, versioned plugin SDK is planned but not implemented. Please propose new rules as small core changes with a fixture and documented confidence level.
+The scanner supports **experimental local community plugins** via `--plugin`; see [docs/plugins.md](docs/plugins.md) for the current interface and security warnings. This interface is not a stable, versioned public SDK yet. Please propose new built-in rules with a minimal fixture and documented confidence level, or provide deterministic positive/negative fixtures for a trusted plugin.
 
 Rule results should distinguish **confirmed**, reproducible failures from **needs-review** observations. False positives harm trust more than a smaller but accurate feature set.
 
